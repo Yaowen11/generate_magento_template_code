@@ -245,7 +245,7 @@ use Psr\\Log\\LoggerInterface;
 use ${magentoModuleBaseNamespace}\Model\\${magentoModelName}Factory;
 use ${magentoModuleBaseNamespace}\Model\\ResourceModel\\${magentoModelName} as Resource${magentoModelName};
 use ${magentoModuleBaseNamespace}\Model\\ResourceModel\\${magentoModelName}\\Collection;
-use ${magentoModuleBaseNamespace}\Model\\ResourceModel\\${magentoModelName}\\CollectionFactory;
+use ${magentoModuleBaseNamespace}\Model\\ResourceModel\\${magentoModelName}\\CollectionFactory as ${magentoModelName}CollectionFactory;
 
 class ${magentoModelName}Repository
 {
