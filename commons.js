@@ -18,16 +18,18 @@ function createDirIfNotExists(dirPath) {
     }
 }
 
-async function buildMagentoModuleAbsolutePath(rootPath, moduleName) {
+function buildMagentoModuleAbsolutePath(rootPath, moduleName) {
     const magentoRootAbsolutePath = path.join(rootPath, 'app', 'code');
     const modulePath = path.join(magentoRootAbsolutePath, ...moduleName.toString().split('_'));
-    const moduleExists = await fs.promises.readFile(path.join(modulePath, 'etc', 'module.xml'), {encoding: 'utf8'}).then(data => {
-        return data.includes('name="' + moduleName + '"');
-    })
-    if (moduleExists) {
-        return Promise.resolve(modulePath);
+    try {
+        const moduleXmlContent = fs.readFileSync(path.join(modulePath, 'etc', 'module.xml'));
+        if (moduleXmlContent.includes('name="' + moduleName + '"')) {
+            return modulePath;
+        }
+        throw new Error('module not exists');
+    } catch (e) {
+        throw e;
     }
-    return Promise.reject('module not exists');
 }
 
 function writeMagentoFile(magentoFile, content) {
@@ -137,15 +139,13 @@ function parseMagentoDefineTableXmlNodes(tableDefineNodes, tableName) {
     return tableMeta;
 }
 
-async function moduleMeta(rootPath, moduleName) {
+function moduleMeta(rootPath, moduleName) {
     return {
         name: moduleName,
         namespace: moduleName.replace('_', '\\') + '\\',
-        path: await buildMagentoModuleAbsolutePath(rootPath, moduleName),
+        path: buildMagentoModuleAbsolutePath(rootPath, moduleName),
     }
 }
-
-
 
 exports.hump = hump;
 exports.createDirIfNotExists = createDirIfNotExists;

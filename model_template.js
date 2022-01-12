@@ -31,7 +31,7 @@ function modelMeta(moduleMeta, tableName) {
         repositoryPath: modelPath,
         repositoryNamespace: modelNamespace,
         repositoryVariable: `${modelVariable}Repository`,
-        repositoryUseName: `use ${modelName}\\${modelName}Repository`
+        repositoryUseName: `use ${modelNamespace}\\${modelName}Repository`
     }
 }
 
@@ -238,4 +238,4 @@ class ${modelMeta.repositoryName}
 }
 
 exports.buildModelTemplateFiles = buildModelTemplateFiles;
-exports.modelMeta = moduleMeta;
+exports.modelMeta = modelMeta;

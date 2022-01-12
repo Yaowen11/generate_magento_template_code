@@ -6,5 +6,9 @@ const moduleName = process.argv[4];
 const backendUrl = process.argv[5];
 const location = process.argv[6];
 
-index.model.buildModelTemplateFiles(rootPath, moduleName, table).then(() => console.log('done')).catch(err => {throw err});
-// index.backend(rootPath, moduleName, table, backendUrl, location).then(() => console.log('done')).catch(err => {throw err});
+index.model.buildModelTemplateFiles(rootPath, moduleName, table)
+    .then(() => console.log('model done'))
+    .catch(err => {throw err});
+index.backend(rootPath, moduleName, table, backendUrl, location)
+    .then(() => console.log('backend done'))
+    .catch(err => {throw err});
