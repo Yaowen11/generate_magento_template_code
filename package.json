@@ -4,12 +4,15 @@
   "description": "generate_magento2 template code, like Model, ResourceModel, Collection, Repository",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test.js"
   },
   "keywords": [
     "magento2",
     "template code"
   ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "fast-xml-parser": "^4.0.1"
+  }
 }
