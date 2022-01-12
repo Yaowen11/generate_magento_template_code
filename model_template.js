@@ -5,8 +5,8 @@ const {createDirIfNotExists, writeMagentoFile, moduleMeta, hump, tableMeta} = re
 
 function modelMeta(moduleMeta, tableName) {
     const modelName = hump(tableName);
-    const modelNamespace = `${moduleMeta.namespace}Model;`;
-    const modelVariable = '$' + modelName[0].toLowerCase() + name.slice(1);
+    const modelNamespace = `${moduleMeta.namespace}Model`;
+    const modelVariable = '$' + modelName[0].toLowerCase() + modelName.slice(1);
     const modelPath = path.join(moduleMeta.path, 'Model');
     return {
         name: modelName,
@@ -17,13 +17,13 @@ function modelMeta(moduleMeta, tableName) {
 
         resourceName: modelName,
         resourcePath: path.join(moduleMeta.path, 'Model', 'ResourceModel'),
-        resourceNamespace: `${modelNamespace}\\ResourceModel;`,
+        resourceNamespace: `${modelNamespace}\\ResourceModel`,
         resourceVariable: `$resource${modelName}`,
         resourceUseName: `use ${modelNamespace}\\ResourceModel\\${modelName} as Resource${modelName}`,
 
         collectionName: 'Collection',
         collectionPath: path.join(moduleMeta.path, 'Model', 'ResourceModel', modelName),
-        collectionNamespace: `${modelNamespace}\\ResourceModel\\${modelName};`,
+        collectionNamespace: `${modelNamespace}\\ResourceModel\\${modelName}`,
         collectionFactory: `CollectionFactory`,
         collectionUseName: `use ${modelNamespace}\\ResourceModel\\${modelName}\\Collection`,
 
@@ -35,8 +35,9 @@ function modelMeta(moduleMeta, tableName) {
     }
 }
 
-async function buildModelTemplateFiles(moduleName, tableName) {
-    const module = await moduleMeta(moduleName);
+
+async function buildModelTemplateFiles(rootPath, moduleName, tableName) {
+    const module = await moduleMeta(rootPath, moduleName);
     const tableMetaData = await tableMeta(module.path, tableName);
     const model = modelMeta(module, tableName);
     // create dir
@@ -45,7 +46,7 @@ async function buildModelTemplateFiles(moduleName, tableName) {
     createDirIfNotExists(model.collectionPath);
     // magento model file
     const modelContent = buildMagentoModelContent(tableMetaData, model);
-    const modelFile = path.join(model.path, module.name + '.php');
+    const modelFile = path.join(model.path, model.name + '.php');
     writeMagentoFile(modelFile, modelContent);
     const repositoryContent = buildMagentoRepositoryContent(tableMetaData, model);
     const repositoryFile = path.join(model.repositoryPath, model.repositoryName + '.php');
@@ -63,7 +64,7 @@ async function buildModelTemplateFiles(moduleName, tableName) {
 function buildMagentoModelContent(tableMetaData, modelMeta) {
     let modelContent = `<?php
 
-namespace ${modelMeta.namespace}
+namespace ${modelMeta.namespace};
 
 use Magento\\Framework\\Model\\AbstractModel;
 ${modelMeta.resourceUseName};
@@ -82,11 +83,11 @@ ${modelMeta.resourceUseName};
     if (tableMetaData.consts.size > 0) {
         for (let [columnName, constDefine] of tableMetaData.consts) {
             for (let constName in constDefine) {
-                modelContent += os.EOL + '    public const ' + constName + ' = ' + constDefine[constName];
+                modelContent += os.EOL + '    public const ' + constName + ' = ' + constDefine[constName] + ';' + os.EOL;
             }
         }
     }
-    modelContent +=
+    modelContent += os.EOL +
 `    protected function _construct() 
     {
         $this->_init(Resource${modelMeta.resourceName}::class);
@@ -97,13 +98,10 @@ ${modelMeta.resourceUseName};
 }
 
 function buildMagentoResourceContent(tableName, tableMetaData, modelMeta) {
-    let idFieldName = '';
-    tableMetaData.primary.forEach((value, key) => {
-        idFieldName = key;
-    })
+    let idFieldName = tableMetaData.primary.name
     return `<?php
 
-namespace ${modelMeta.resourceNamespace}
+namespace ${modelMeta.resourceNamespace};
 
 use Magento\\Framework\\Model\\ResourceModel\\Db\\AbstractDb;
 
@@ -120,7 +118,7 @@ class ${modelMeta.resourceName} extends AbstractDb
 function buildMagentoCollectionContent(modelMeta) {
     return `<?php
 
-namespace ${modelMeta.collectionNamespace}
+namespace ${modelMeta.collectionNamespace};
 
 use Magento\\Framework\\Model\\ResourceModel\\Db\\Collection\\AbstractCollection;
 ${modelMeta.useName};
@@ -137,12 +135,11 @@ class Collection extends AbstractCollection
 }
 
 function buildMagentoRepositoryContent(tableDefine, modelMeta) {
-    let idFieldName = '';
-    tableDefine.primary.forEach((value, key) => {idFieldName = key;})
+    let idFieldName = tableDefine.primary.name;
     let idFieldType = tableDefine.column.get(idFieldName).type.includes('int') ? 'int' : 'string';
     return `<?php
     
-namespace ${modelMeta.repositoryNamespace}
+namespace ${modelMeta.repositoryNamespace};
 
 use Exception;
 use Magento\\Framework\\Exception\\CouldNotSaveException;
@@ -164,19 +161,19 @@ class ${modelMeta.repositoryName}
     private $logger;
     
     public function __construct(Resource${modelMeta.resourceName} ${modelMeta.resourceVariable},
-                                ${modelMeta.name}Factory \$${modelMeta.variable}Factory,
+                                ${modelMeta.name}Factory ${modelMeta.variable}Factory,
                                 CollectionFactory $collectionFactory,
                                 LoggerInterface $logger)
     {
         $this->resource${modelMeta.resourceName} = ${modelMeta.resourceVariable};
-        $this->${modelMeta.name}Factory = ${modelMeta.variable}Factory;
+        $this->${modelMeta.variable.slice(1)}Factory = ${modelMeta.variable}Factory;
         $this->collectionFactory = $collectionFactory;
         $this->logger = $logger;
     }
     
     public function build(array $data = []): ${modelMeta.name}
     {
-        ${modelMeta.variable} = $this->${modelMeta.variable}Factory->create();
+        ${modelMeta.variable} = $this->${modelMeta.variable.slice(1)}Factory->create();
         return $this->update(${modelMeta.variable}, $data);
     }
     
@@ -192,12 +189,12 @@ class ${modelMeta.repositoryName}
     }
     
     /**
-     * $throws CouldNotDeleteException
+     * @throws CouldNotDeleteException
      */
     public function delete(${modelMeta.name} ${modelMeta.variable}): void
     {
         try {
-            $this-resource${modelMeta.resourceName}->delete(\$${modelMeta.variable});
+            $this->resource${modelMeta.resourceName}->delete(${modelMeta.variable});
         } catch(Exception $exception) {
             $this->logger->error($exception->getMessage());
             throw new CouldNotDeleteException(__('Could not delete ${modelMeta.name}'));
@@ -214,17 +211,17 @@ class ${modelMeta.repositoryName}
     /**
      * @throws CouldNotSaveException
     */
-    public function save(${modelMeta.name} \$${modelMeta.variable}): void
+    public function save(${modelMeta.name} ${modelMeta.variable}): void
     {
         try {
-            $this->resource${modelMeta.resourceName}->save(\$${modelMeta.variable});
+            $this->resource${modelMeta.resourceName}->save(${modelMeta.variable});
         } catch (\\Exception $exception) {
             $this->logger->error($exception->getMessage());
             throw new CouldNotSaveException(__('Could not save ${modelMeta.name}'));
         }
     }
     
-    public function update(${modelMeta.name} ${modelMeta.variable}, array $data = []): void
+    public function update(${modelMeta.name} ${modelMeta.variable}, array $data = []): ${modelMeta.name}
     {
         if (!empty($data)) {
             foreach ($data as $column => $value) {

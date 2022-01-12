@@ -4,7 +4,7 @@
   "description": "generate_magento2 template code, like Model, ResourceModel, Collection, Repository",
   "main": "index.js",
   "scripts": {
-    "test": "node test.js"
+    "test": "node test.js C:\\Users\\zyw\\work\\rantion\\code\\rantion rantion_banner Rantion_Content rantion/banner marketing/main/banner"
   },
   "keywords": [
     "magento2",

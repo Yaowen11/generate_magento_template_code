@@ -568,7 +568,7 @@ function buildUiComponentListContent(uiComponentMeta, tableMeta, urlMeta, modelM
             }
         }
     }
-    const actions = ${modelMeta.namespace} +"Ui\\Component\\Listing\\Column\\" + urlMeta.middle[0].toUpperCase() + urlMeta.middle.slice(1) + "Actions";
+    const actions = modelMeta.namespace +"Ui\\Component\\Listing\\Column\\" + urlMeta.middle[0].toUpperCase() + urlMeta.middle.slice(1) + "Actions";
     listContent +=
         `
         <actionsColumn name="actions" class="${actions}">
@@ -740,10 +740,10 @@ function buildDiXml(moduleMeta, modelMeta, urlMeta, tableMetaData) {
     }
 }
 
-async function buildBackendTemplate(module, table, url, location) {
+async function buildBackendTemplate(rootPath, module, table, url, location) {
     const urlMetaData = backendUrlMeta(url);
     const tableMetaData = tableMeta(table);
-    const moduleMetaData = await moduleMeta(module);
+    const moduleMetaData = await moduleMeta(rootPath, module);
     const modelMetaData = modelMeta(moduleMetaData, table);
     const locationMeta = backendLocationMeta(location);
     buildBackendRoute(moduleMetaData, urlMetaData);

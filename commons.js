@@ -32,7 +32,9 @@ async function buildMagentoModuleAbsolutePath(rootPath, moduleName) {
 
 function writeMagentoFile(magentoFile, content) {
     fs.writeFile(magentoFile, content, (err) => {
-        throw err;
+        if (err) {
+            throw err;
+        }
     });
 }
 
@@ -89,7 +91,7 @@ function parseMagentoDefineTableXmlNodes(tableDefineNodes, tableName) {
             if (tableDefineNodes[index].includes('tinyint')
                 && (tableDefineNodes[index].includes('comment') &&
                     tableDefineNodes[index].includes('0:') && tableDefineNodes[index].includes('1:'))) {
-                tableConsts.push()
+                tableConsts.push(tableDefineNodes[index]);
             }
             continue;
         }
@@ -135,11 +137,11 @@ function parseMagentoDefineTableXmlNodes(tableDefineNodes, tableName) {
     return tableMeta;
 }
 
-async function moduleMeta(moduleName) {
+async function moduleMeta(rootPath, moduleName) {
     return {
         name: moduleName,
         namespace: moduleName.replace('_', '\\') + '\\',
-        path: await buildMagentoModuleAbsolutePath(moduleName),
+        path: await buildMagentoModuleAbsolutePath(rootPath, moduleName),
     }
 }
 
