@@ -230,9 +230,9 @@ class Save extends Base
         try {
             unset($params['form_key'], $params['key']);
             if ($params['id']) {
-                $this->create($params);
-            } else {
                 $this->update($params);
+            } else {
+                $this->create($params);
             }
         } catch (Exception $exception) {
             $id = $params['id'] ?? '';
@@ -258,8 +258,9 @@ class Save extends Base
      */
     private function update(array $data): void
     {
-        ${modelMeta.variable} = $this->${modelMeta.variable.slice(1)}Repository->get($data['id']);
+        $id = (int)$data['id'];
         unset($data['id']);
+        ${modelMeta.variable} = $this->${modelMeta.variable.slice(1)}Repository->get($id);
         ${modelMeta.variable} = $this->${modelMeta.variable.slice(1)}Repository->update(${modelMeta.variable}, $data);
         $this->${modelMeta.variable.slice(1)}Repository->save(${modelMeta.variable});
     }
@@ -294,7 +295,7 @@ class Delete extends Base
         $id = $this->getRequest()->getParam('id');
         if ($id) {
             try {
-                ${modelMeta.variable} = $this->${modelMeta.variable.slice(1)}Repository->get($id);
+                ${modelMeta.variable} = $this->${modelMeta.variable.slice(1)}Repository->get((int)$id);
                 $this->${modelMeta.variable.slice(1)}Repository->delete(${modelMeta.variable});
             } catch (Exception $e) {
                 $this->messageManager->addErrorMessage(__("We can't delete."));
@@ -435,7 +436,7 @@ function buildUiComponentFormContent(uiComponentMeta, tableMeta, urlMeta, modelM
                 </validation>
                 <dataType>text</dataType>
                 <visible>true</visible>
-                <dataScope>${uiComponentMeta.base}</dataScope>
+                <dataScope>${columnName}</dataScope>
             </settings>
         </field>
 `
