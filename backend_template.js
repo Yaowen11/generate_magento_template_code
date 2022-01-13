@@ -86,7 +86,7 @@ function buildMenuXml(moduleMeta, locationMeta, urlMeta) {
     <menu>
         <add id="${locationMeta.parent.id}" title="${locationMeta.parent.title}" translate="title" module="${moduleMeta.name}"
              parent="${locationMeta.grand.id}" resource="${locationMeta.parent.id}"/>
-        <add id="${locationMeta.node.id}" title="${locationMeta.node.title}" translate="title" module="${locationMeta.parent}"
+        <add id="${locationMeta.node.id}" title="${locationMeta.node.title}" translate="title" module="${locationMeta.node.id}"
              action="${urlMeta.index}" resource="${locationMeta.node.id}"/>
     </menu>
 </config>
