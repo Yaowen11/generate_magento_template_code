@@ -144,7 +144,7 @@ abstract class Base extends Action
     
     protected $title;
     
-    public const ADMIN_RESOURCE = '${moduleName}::${routeName}_${routeMiddle}';
+    public const ADMIN_RESOURCE = '${moduleName}::${routeMiddle}';
     
     public function __construct(Context $context, PageFactory $pageFactory)
     {
@@ -237,7 +237,7 @@ class Save extends Base
         } catch (Exception $exception) {
             $id = $params['id'] ?? '';
             if ($id) {
-                $redirectPath = 'reward/gift/edit/id/'. $id;
+                $redirectPath = '${urlMeta.base}/${urlMeta.middle}/edit/id/'. $id;
             }
             $this->messageManager->addErrorMessage(__("We can't save."));
         }
@@ -473,7 +473,7 @@ function buildUiComponentListContent(uiComponentMeta, tableMeta, urlMeta, module
                 <item name="name" xsi:type="string">add</item>
                 <item name="label" xsi:type="string">Add New</item>
                 <item name="class" xsi:type="string">primary</item>
-                <item name="url" xsi:type="string">reward/gift/new</item>
+                <item name="url" xsi:type="string">${urlMeta.base}/${urlMeta.middle}/new</item>
             </item>
         </item>
     </argument>
