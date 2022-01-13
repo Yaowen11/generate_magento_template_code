@@ -308,12 +308,14 @@ class Delete extends Base
 function buildView(moduleMeta, tableMeta, urlMeta, locationMeta, modelMeta) {
     const viewDir = path.join(moduleMeta.path, 'view');
     createDirIfNotExists(viewDir);
+    const viewAdminhtmlDir = path.join(viewDir, 'adminhtml');
+    createDirIfNotExists(viewAdminhtmlDir);
     buildViewLayout(moduleMeta, urlMeta);
     buildViewUiComponent(moduleMeta, tableMeta, urlMeta, locationMeta, modelMeta);
 }
 
 function buildViewLayout(moduleMeta, urlMeta) {
-    const layout = path.join(moduleMeta.path, 'view', 'layout');
+    const layout = path.join(moduleMeta.path, 'view', 'adminhtml', 'layout');
     createDirIfNotExists(layout);
     const indexContent = `<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
@@ -340,7 +342,7 @@ function buildViewLayout(moduleMeta, urlMeta) {
 }
 
 function buildViewUiComponent(moduleMeta, tableMeta, urlMeta, locationMeta, modelMeta) {
-    const uiComponent = path.join(moduleMeta.path, 'view', 'ui_component');
+    const uiComponent = path.join(moduleMeta.path, 'view', 'adminhtml', 'ui_component');
     createDirIfNotExists(uiComponent);
     const uiComponentMeta = {
         base: urlMeta.base + '_' + urlMeta.middle,
@@ -378,7 +380,7 @@ function buildUiComponentFormContent(uiComponentMeta, tableMeta, urlMeta, modelM
             <dep>${uiComponentMeta.base}_form.${uiComponentMeta.base}_form_data_source</dep>
         </deps>
     </settings>
-    <dataSource name="${uiComponentMeta}_form_data_source">
+    <dataSource name="${uiComponentMeta.base}_form_data_source">
         <argument name="data" xsi:type="array">
             <item name="js_config" xsi:type="array">
                 <item name="component" xsi:type="string">Magento_Ui/js/form/provider</item>
