@@ -1,14 +1,19 @@
-const index = require('./index');
+const path = require('path');
+const fs = require('fs');
 
-const rootPath = process.argv[2];
-const table = process.argv[3];
-const moduleName = process.argv[4];
-const backendUrl = process.argv[5];
-const location = process.argv[6];
+const testPath = path.join(__dirname, 'test');
+fs.readdir(testPath, (err, files) => {
+    if (err) {
+        throw err;
+    }
+    for (let testFile of files) {
+        fs.readFile(path.join(testPath, testFile), (err, data) => {
+            if (err) {
+                throw err;
+            }
+            eval(data.toString());
+        })
+    }
+})
 
-index.model.buildModelTemplateFiles(rootPath, moduleName, table)
-    .then(() => console.log('model done'))
-    .catch(err => {throw err});
-index.backend(rootPath, moduleName, table, backendUrl, location)
-    .then(() => console.log('backend done'))
-    .catch(err => {throw err});
+
