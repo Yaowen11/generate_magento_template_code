@@ -78,21 +78,19 @@ ComponentRegistrar::register(ComponentRegistrar::MODULE, '${this.meta.name}', __
 
     initComposerJsonFile() {
         const composerJsonFile = path.join(this.meta.realPath, 'composer.json');
-        fs.writeFile(composerJsonFile, JSON.stringify(this.composerJson, null, 4), err => {
-            throw err;
-        })
+        Commons.asyncWriteFile(composerJsonFile, JSON.stringify(this.composerJson, null, 4));
     }
 
     initRegistrationPhp() {
         const registrationPhp = path.join(this.meta.realPath, 'registration.php');
-        fs.writeFile(registrationPhp, this.registration, err => {throw err;})
+        Commons.asyncWriteFile(registrationPhp, this.registration);
     }
 
     initModuleXml() {
         const etcPath = path.join(this.meta.realPath, 'etc');
         Commons.createDirIfNotExists(etcPath);
         const moduleXml = path.join(etcPath, 'module.xml')
-        fs.writeFile(moduleXml, this.moduleXml, err => {throw err});
+        Commons.asyncWriteFile(moduleXml, this.moduleXml);
     }
 
     moduleExists() {

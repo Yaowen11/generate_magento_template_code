@@ -17,16 +17,12 @@ function commonsCreateDirIfNotExistsTest() {
     } catch (err) {}
 }
 
-commonsCreateDirIfNotExistsTest();
-
 function commonsUnderscore2humpTest() {
     const originString = 'origin_string';
     const originHump = 'OriginString';
     const humpString = Commons.underscore2hump(originString);
     assert.equal(originHump, humpString);
 }
-
-commonsUnderscore2humpTest();
 
 function commonsMagentoBackendUrlMetaTest() {
     const backendUrl = 'route/controller';
@@ -35,8 +31,6 @@ function commonsMagentoBackendUrlMetaTest() {
     assert.equal('route', magentoBackendUrlMeta.route)
     assert.equal('controller', magentoBackendUrlMeta.controller)
 }
-
-commonsMagentoBackendUrlMetaTest();
 
 function commonsMagentoModuleMetaTest() {
     const rootPath = __dirname;
@@ -49,4 +43,16 @@ function commonsMagentoModuleMetaTest() {
     assert.equal(magentoModuleMeta.packageName, 'Package');
 }
 
-commonsMagentoModuleMetaTest();
+function commonsMagentoModelMetaTest() {
+    const moduleName = 'Module_Package';
+    const moduleMeta = Commons.magentoModuleMeta(__dirname, moduleName);
+    const tableName = 'magento_table';
+    const modelMeta = Commons.magentoModelMeta(tableName, moduleMeta);
+    console.log(modelMeta);
+}
+
+// commonsMagentoModuleMetaTest();
+// commonsMagentoBackendUrlMetaTest();
+// commonsUnderscore2humpTest();
+// commonsCreateDirIfNotExistsTest();
+// commonsMagentoModelMetaTest();

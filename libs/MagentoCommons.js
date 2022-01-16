@@ -1,7 +1,5 @@
 const fs = require('fs');
-const os = require('os');
 const path = require("path");
-const {hump} = require("../commons");
 
 class MagentoCommons {
 
@@ -45,7 +43,7 @@ class MagentoCommons {
         const modelName = this.underscore2hump(tableName);
         const modelNamespace = `${moduleMeta.namespace}Model`;
         const modelVariable = '$' + modelName[0].toLowerCase() + modelName.slice(1);
-        const modelPath = path.join(moduleMeta.path, 'Model');
+        const modelPath = path.join(moduleMeta.realPath, 'Model');
         return {
             name: modelName,
             namespace: modelNamespace,
@@ -54,13 +52,13 @@ class MagentoCommons {
             useName: `use ${modelNamespace}\\${modelName}`,
 
             resourceName: modelName,
-            resourcePath: path.join(moduleMeta.path, 'Model', 'ResourceModel'),
+            resourcePath: path.join(moduleMeta.realPath, 'Model', 'ResourceModel'),
             resourceNamespace: `${modelNamespace}\\ResourceModel`,
             resourceVariable: `$resource${modelName}`,
             resourceUseName: `use ${modelNamespace}\\ResourceModel\\${modelName} as Resource${modelName}`,
 
             collectionName: 'Collection',
-            collectionPath: path.join(moduleMeta.path, 'Model', 'ResourceModel', modelName),
+            collectionPath: path.join(moduleMeta.realPath, 'Model', 'ResourceModel', modelName),
             collectionNamespace: `${modelNamespace}\\ResourceModel\\${modelName}`,
             collectionFactory: `CollectionFactory`,
             collectionUseName: `use ${modelNamespace}\\ResourceModel\\${modelName}\\Collection`,
@@ -71,6 +69,25 @@ class MagentoCommons {
             repositoryVariable: `${modelVariable}Repository`,
             repositoryUseName: `use ${modelNamespace}\\${modelName}Repository`
         }
+    }
+
+    static asyncWriteFile(fileName, content) {
+        fs.writeFile(fileName, content, err => {
+            if (err) {
+                console.log(`async ${fileName} error}`);
+                throw err;
+            } else {
+                console.log(`async write ${fileName} done`);
+            }
+        })
+    }
+
+    static ifFileNotExistsAsyncWriteFile(fileName, content) {
+        fs.access(fileName, (err, stat) => {
+            if (err) {
+                this.asyncWriteFile(fileName, content);
+            }
+        });
     }
 }
 
