@@ -54,7 +54,7 @@ class MagentoConfigXml {
         MagentoCommons.ifFileNotExistsAsyncWriteFile(this.dbSchemaXml, dbSchemaContent);
     }
 
-    buildMenuXml(item) {
+    buildMenuXml(addItem) {
         const initMenuXmlContent = `<?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
@@ -62,15 +62,39 @@ class MagentoConfigXml {
     </menu>
 </config>`
         const etcAdminhtml = path.join(this.etcPath, 'adminhtml');
+        const menuXml = path.join(etcAdminhtml, 'menu.xml');
         MagentoCommons.createDirIfNotExists(etcAdminhtml);
         const initPromise = new Promise(function (resolve, reject) {
-            MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(etcAdminhtml, 'menu.xml'), initMenuXmlContent);
+            MagentoCommons.ifFileNotExistsAsyncWriteFile(menuXml, initMenuXmlContent);
             resolve();
         });
         initPromise.then(() => {
-            if (item) {
-                const menu = {};
-
+            if (addItem) {
+                fs.promises.readFile(menuXml).then(data => {
+                    const menuContent = this.xmlParser.parse(data);
+                    console.log(menuContent, menuContent['config']['menu']);
+                    const originMenu = menuContent['config']['menu'];
+                    if (originMenu === '') {
+                        menuContent['config']['menu']['add'] = addItem;
+                    } else {
+                        const originAddItem = menuContent.config['menu']['add'];
+                        const addItemMap = new Map();
+                        if (Array.isArray(menuContent['config']['menu']['add'])) {
+                            for (let addItem of originAddItem) {
+                                if (!addItemMap.has(addItem.id)) {
+                                    addItemMap.set(addItem.id, addItem);
+                                }
+                            }
+                        } else {
+                            addItemMap.set(menuContent['config']['menu']['add']['id'], menuContent['config']['menu']['add']);
+                        }
+                        if (!addItemMap.has(addItem.id)) {
+                            addItemMap.set(addItem.id, addItem);
+                        }
+                        menuContent['config']['menu']['add'] = Array.from(addItemMap.values());
+                    }
+                    this.writeXml(menuXml, menuContent);
+                })
             }
         })
 
@@ -88,26 +112,37 @@ class MagentoConfigXml {
         if (!tableNode) {
             return;
         }
-        const schemaContent = this.xmlParser.parse(fs.readFileSync(this.dbSchemaXml));
-        const newTableNode = [tableNode];
-        if ('table' in schemaContent.schema) {
-            if (Array.isArray(schemaContent.schema.table)) {
-                newTableNode.push(...schemaContent.schema.table);
-            } else {
-                newTableNode.push(schemaContent.schema.table);
+        fs.promises.readFile(this.dbSchemaXml).then(data => {
+            const schemaContent = this.xmlParser.parse(data);
+            const newTableNode = [];
+            if ('table' in schemaContent.schema) {
+                if (Array.isArray(schemaContent.schema.table)) {
+                    newTableNode.push(...schemaContent.schema.table);
+                } else {
+                    newTableNode.push(schemaContent.schema.table);
+                }
             }
-        }
-        schemaContent.schema.table = newTableNode;
-        this.flushDbSchemaWhitelistJson(newTableNode);
-        // delete schemaContent['#text'];
-        // const xmlContent = this.xmlBuilder.build(schemaContent);
-        // const dbSchemaXmlFile = this.dbSchemaXml;
-        // MagentoCommons.asyncWriteFile(dbSchemaXmlFile, xmlContent);
+            newTableNode.push(tableNode);
+            const tableMap = new Map();
+            for (let tableDefine of newTableNode) {
+                tableMap.set(tableDefine.name, tableDefine);
+            }
+            schemaContent.schema.table = Array.from(tableMap.values());
+            this.flushDbSchemaWhitelistJson(newTableNode);
+            this.writeXml(this.dbSchemaXml, schemaContent);
+        }).catch(err => {
+            throw err;
+        });
+    }
+
+    writeXml(xmlFile, jsonContent) {
+        delete jsonContent['#text'];
+        const xmlContent = this.xmlBuilder.build(jsonContent);
+        MagentoCommons.asyncWriteFile(xmlFile, xmlContent);
     }
 
     flushDbSchemaWhitelistJson(tables) {
         const dbSchemaWhitelistJsonContent = {};
-        console.log(tables);
         if (tables && Array.isArray(tables)) {
             for (let table of tables) {
                 dbSchemaWhitelistJsonContent[table.name] = {};

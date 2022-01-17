@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require("path");
+const {XMLParser, XMLBuilder} = require('fast-xml-parser/src/fxp');
 
 class MagentoCommons {
 

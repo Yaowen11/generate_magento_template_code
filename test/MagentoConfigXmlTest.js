@@ -73,9 +73,19 @@ const content = {
         'xsi:type': 'primary',
         referenceId: 'PRIMARY'
     },
-    name: 'rantion_banner_2',
+    name: 'rantion_banner_3',
     resource: 'default',
     engine: 'innodb',
     comment: ''
 }
 magentoConfigXml.appendDbSchemaXml(content);
+
+const menuAddItem = {
+    id: 'Rantion_Content::main_3',
+    title: 'Rantion Content',
+    translate: 'title',
+    module: 'Rantion_Content',
+    parent: 'Magento_Backend::marketing',
+    resource: 'Rantion_Content::main'
+};
+magentoConfigXml.buildMenuXml(menuAddItem);
