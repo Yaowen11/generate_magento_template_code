@@ -18,3 +18,7 @@ fs.access(file, (err, access) => {
         console.log(access)
     }
 })
+
+fs.promises.readFile('temp.txt').then(data => {
+    console.log()
+})

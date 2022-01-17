@@ -10,7 +10,7 @@ const magentoConfigXml = new MagentoConfigXml(magentoModuleMeta);
 // magentoConfigXml.initAclXml();
 // magentoConfigXml.initDbSchemaXml();
 
-const content = {
+const tableNode = {
     column: [
         {
             'xsi:type': 'int',
@@ -78,7 +78,7 @@ const content = {
     engine: 'innodb',
     comment: ''
 }
-magentoConfigXml.appendDbSchemaXml(content);
+magentoConfigXml.buildDbSchemaXml(tableNode);
 
 const menuAddItem = {
     id: 'Rantion_Content::main_3',
