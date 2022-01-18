@@ -69,23 +69,27 @@ const tableNode = {
         }
     ],
     constraint: {
-        column: { name: 'id' },
+        column: {name: 'id'},
         'xsi:type': 'primary',
         referenceId: 'PRIMARY'
     },
-    name: 'rantion_banner_3',
+    name: 'rantion_banner_2',
     resource: 'default',
     engine: 'innodb',
     comment: ''
 }
-magentoConfigXml.buildDbSchemaXml(tableNode);
+magentoConfigXml.buildDbSchemaXml(tableNode).then(r => {
+    console.log('done')
+}).catch(e => {
+    console.log('err' + e)
+})
 
-const menuAddItem = {
-    id: 'Rantion_Content::main_3',
-    title: 'Rantion Content',
-    translate: 'title',
-    module: 'Rantion_Content',
-    parent: 'Magento_Backend::marketing',
-    resource: 'Rantion_Content::main'
-};
-magentoConfigXml.buildMenuXml(menuAddItem);
+// const menuAddItem = {
+//     id: 'Rantion_Content::main_1',
+//     title: 'Rantion Content',
+//     translate: 'title',
+//     module: 'Rantion_Content',
+//     parent: 'Magento_Backend::marketing',
+//     resource: 'Rantion_Content::main'
+// };
+// magentoConfigXml.buildMenuXml(menuAddItem);
