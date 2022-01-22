@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require("path");
+const {XMLParser, XMLBuilder} = require("fast-xml-parser/src/fxp")
 
 class MagentoCommons {
 
@@ -41,7 +42,7 @@ class MagentoCommons {
 
     static magentoModelMeta(tableName, moduleMeta) {
         const modelName = this.underscore2hump(tableName);
-        const modelNamespace = `${moduleMeta.namespace}Model`;
+        const modelNamespace = `${moduleMeta.namespace}\\Model`;
         const modelVariable = '$' + modelName[0].toLowerCase() + modelName.slice(1);
         const modelPath = path.join(moduleMeta.realPath, 'Model');
         return {
@@ -88,6 +89,72 @@ class MagentoCommons {
                 this.asyncWriteFile(fileName, content);
             }
         });
+    }
+
+    static getXmlParser() {
+        return new XMLParser({
+            ignoreAttributes: false,
+            attributeNamePrefix: "@@",
+            allowBooleanAttributes: true,
+        });
+    }
+
+    static getXmlBuilder() {
+        return new XMLBuilder({
+            ignoreAttributes: false,
+            attributeNamePrefix: "@@",
+            suppressEmptyNode: true,
+            suppressBooleanAttributes: false,
+            format: true
+        });
+    }
+
+    static magentoSchemaXmlTableMeta(dbSchemaXml, tableName) {
+        const data = fs.readFileSync(dbSchemaXml, 'utf8');
+        const xmlParser = this.getXmlParser();
+        const schemaJson = xmlParser.parse(data);
+        if ('table' in schemaJson.schema) {
+            let tableDefine = {};
+            if (Array.isArray(schemaJson.schema.table)) {
+                for (let tableDefineObject of schemaJson.schema.table) {
+                    if (tableDefineObject['@@name'] === tableName) {
+                        tableDefine = tableDefineObject;
+                        break;
+                    }
+                }
+            } else {
+                if (schemaJson.schema.table['@@name'] === tableName) {
+                    tableDefine = schemaJson.schema.table;
+                }
+            }
+            if (Object.keys(tableDefine).length === 0) {
+                throw new Error('no such file db_schema.xml');
+            }
+            let tablePrimaryKeyColumn = '';
+
+            try {
+                if (Array.isArray(tableDefine.constraint)) {
+                    for (let constraint of tableDefine.constraint) {
+                        if (constraint['@@referenceId'] === 'PRIMARY') {
+                            tablePrimaryKeyColumn = constraint.column['@@name'] ?? 'id';
+                            break;
+                        }
+                    }
+                } else {
+                    if (tableDefine.constraint['@@referenceId'] === 'PRIMARY') {
+                        tablePrimaryKeyColumn = tableDefine.constraint.column['@@name'] || 'id';
+                    }
+                }
+                return {
+                    tableMeta: tableDefine,
+                    primaryKey: tablePrimaryKeyColumn
+                };
+            } catch (e) {
+                throw new Error('table not define primary key constraint')
+            }
+        } else {
+            throw new Error('no such file db_schema.xml');
+        }
     }
 }
 

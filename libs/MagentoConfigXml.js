@@ -1,9 +1,10 @@
 const path = require('path');
-const MagentoCommons = require('./MagentoCommons');
 const {XMLParser, XMLBuilder, XMLValidator} = require("fast-xml-parser/src/fxp")
 const fs = require("fs");
+const MagentoCommons = require("./MagentoCommons");
 
 class MagentoConfigXml {
+
     constructor(magentoModuleMeta) {
         this.moduleMeta = magentoModuleMeta;
         this.etcPath = path.join(this.moduleMeta.realPath, 'etc');
@@ -11,18 +12,8 @@ class MagentoConfigXml {
         MagentoCommons.createDirIfNotExists(this.etcAdminhtmlPath);
         this.etcFrontendPath = path.join(this.moduleMeta.realPath, 'etc', 'frontend');
         MagentoCommons.createDirIfNotExists(this.etcFrontendPath);
-        this.xmlParser = new XMLParser({
-            ignoreAttributes: false,
-            attributeNamePrefix: "@@",
-            allowBooleanAttributes: true,
-        });
-        this.xmlBuilder = new XMLBuilder({
-            ignoreAttributes: false,
-            attributeNamePrefix: "@@",
-            suppressEmptyNode: true,
-            suppressBooleanAttributes: false,
-            format: true
-        });
+        this.xmlParser = MagentoCommons.getXmlParser();
+        this.xmlBuilder = MagentoCommons.getXmlBuilder();
     }
 
     buildAclXml(item) {
