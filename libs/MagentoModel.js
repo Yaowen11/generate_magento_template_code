@@ -310,14 +310,14 @@ class DataProvider extends AbstractDataProvider
             if (column['@@name'].includes("image")) {
                 this.dataProviderContent += `
             if (isset($postData['${column['@@name']}'])) {
-                ${column['@@name']}Url = [
+                \$${column['@@name']} = [
                     [
                         'name' => basename($postData['${column['@@name']}']),
                         'url' => $postData['${column['@@name']}'],
                         'type' => 'image'
                     ]
                 ];
-                $postData['${column['@@name']}'] = ${column['@@name']}Url;                
+                $postData['${column['@@name']}'] = \$${column['@@name']};                
 `
         this.dataProviderContent += `
             $this->loadedData[$requestId] = $postData;

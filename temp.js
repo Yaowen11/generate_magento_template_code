@@ -1,4 +1,6 @@
 const fs = require('fs');
+const MagentoCommons = require("./libs/MagentoCommons");
+const path = require("path");
 
 const file = 'cod.dot';
 
@@ -32,10 +34,11 @@ const file = 'cod.dot';
 //
 // initPromise(initFile, content).then(console.log).catch((err) => {throw  err})
 
-let a;
-if (1 < 0) {
-   let a = 3;
-} else {
-    let a = 5;
+
+const xmlParser = MagentoCommons.getXmlParser();
+const listXml = path.join(__dirname, 'app', 'code', 'Module', 'Package', 'list.xml');
+const listJson = xmlParser.parse(fs.readFileSync(listXml, 'utf8'));
+
+for (let column of listJson.listing.columns.column) {
+    console.log(column);
 }
-console.log(a);
