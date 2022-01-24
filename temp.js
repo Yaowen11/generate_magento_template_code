@@ -38,7 +38,8 @@ const file = 'cod.dot';
 const xmlParser = MagentoCommons.getXmlParser();
 const listXml = path.join(__dirname, 'app', 'code', 'Module', 'Package', 'list.xml');
 const listJson = xmlParser.parse(fs.readFileSync(listXml, 'utf8'));
+fs.writeFileSync('list.json', JSON.stringify(listJson, null, 4));
+const formXml = path.join(__dirname, 'app', 'code', 'Module', 'Package', 'form.xml');
+const formJson = xmlParser.parse(fs.readFileSync(listXml, 'utf8'));
+fs.writeFileSync('form.json', JSON.stringify(formJson, null, 4));
 
-for (let column of listJson.listing.columns.column) {
-    console.log(column);
-}
