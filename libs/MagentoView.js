@@ -1,6 +1,5 @@
 const path = require('path');
 const MagentoCommons = require('./MagentoCommons');
-const os = require("os");
 
 class MagentoView {
 
@@ -46,7 +45,7 @@ class MagentoView {
         MagentoCommons.createDirIfNotExists(uiComponentListingDir);
         const uiComponentListingColumnDir = path.join(uiComponentListingDir, 'Column');
         MagentoCommons.createDirIfNotExists(uiComponentListingColumnDir);
-        for (let columnDefine of this.tableMeta.tableMeta.column) {
+        for (let columnDefine of this.tableMeta.column) {
             const columnClassContent = this.componentColumnClassContent(columnDefine);
             if (Object.getOwnPropertyNames(columnClassContent).length > 0) {
                 MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(uiComponentListingColumnDir, columnClassContent.file), columnClassContent.content);
@@ -344,7 +343,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                 }
             }
         }
-        for (let columnDefine of this.tableMeta.tableMeta.column) {
+        for (let columnDefine of this.tableMeta.column) {
             let listColumn = this.buildListColumn(columnDefine);
             if (Object.getOwnPropertyNames(listColumn).length > 0) {
                 uiComponentListContentJson["listing"]["columns"]["column"].push(listColumn);
@@ -556,7 +555,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                 "@@xsi:noNamespaceSchemaLocation": "urn:magento:module:Magento_Ui:etc/ui_configuration.xsd"
             }
         };
-        for (let columnDefine of this.tableMeta.tableMeta.column) {
+        for (let columnDefine of this.tableMeta.column) {
             const formColumn = this.buildFormColumn(columnDefine);
             if (Object.getOwnPropertyNames(formColumn).length > 0) {
                 uiComponentFormJson["form"]["fieldset"]["field"].push(formColumn);
@@ -723,67 +722,113 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
             }
         }
         if (columnDefine['@@xsi:type'] === 'text') {
-            return {
-                "argument": {
-                    "item": {
+            if (columnDefine['@@comment'] === 'wysiwyg') {
+                return {
+                    "argument": {
                         "item": {
-                            "item": [
-                                {
-                                    "#text": "100px",
-                                    "@@name": "height",
-                                    "@@xsi:type": "string"
-                                },
-                                {
-                                    "#text": true,
-                                    "@@name": "add_variables",
-                                    "@@xsi:type": "boolean"
-                                },
-                                {
-                                    "#text": true,
-                                    "@@name": "add_widgets",
-                                    "@@xsi:type": "boolean"
-                                },
-                                {
-                                    "#text": true,
-                                    "@@name": "add_images",
-                                    "@@xsi:type": "boolean"
-                                },
-                                {
-                                    "#text": true,
-                                    "@@name": "add_directives",
-                                    "@@xsi:type": "boolean"
-                                }
-                            ],
-                            "@@name": "wysiwygConfigData",
+                            "item": {
+                                "item": [
+                                    {
+                                        "#text": "100px",
+                                        "@@name": "height",
+                                        "@@xsi:type": "string"
+                                    },
+                                    {
+                                        "#text": true,
+                                        "@@name": "add_variables",
+                                        "@@xsi:type": "boolean"
+                                    },
+                                    {
+                                        "#text": true,
+                                        "@@name": "add_widgets",
+                                        "@@xsi:type": "boolean"
+                                    },
+                                    {
+                                        "#text": true,
+                                        "@@name": "add_images",
+                                        "@@xsi:type": "boolean"
+                                    },
+                                    {
+                                        "#text": true,
+                                        "@@name": "add_directives",
+                                        "@@xsi:type": "boolean"
+                                    }
+                                ],
+                                "@@name": "wysiwygConfigData",
+                                "@@xsi:type": "array"
+                            },
+                            "@@name": "config",
                             "@@xsi:type": "array"
                         },
-                        "@@name": "config",
+                        "@@name": "data",
                         "@@xsi:type": "array"
                     },
+                    "settings": {
+                        "label": `${MagentoCommons.underscore2hump(columnDefine['@@name'])}`,
+                        "dataType": "text",
+                        "visible": true,
+                        "dataScope": columnDefine['@@name']
+                    },
+                    "formElements": {
+                        "wysiwyg": {
+                            "settings": {
+                                "rows": 8,
+                                "wysiwyg": true
+                            }
+                        }
+                    },
+                    "@@name": columnDefine['@@name'],
+                    "@@formElement": "wysiwyg"
+                }
+            }
+            return {
+                "@@name": columnDefine['@@name'],
+                "argument": {
                     "@@name": "data",
-                    "@@xsi:type": "array"
+                    "@@xsi:type": "array",
+                    "item": {
+                        "@@name": "config",
+                        "@@xsi:type": "array",
+                        "item": [
+                            {
+                                "#text": "textarea",
+                                "@@name": "formElement",
+                                "@@xsi:type": "string"
+                            },
+                            {
+                                "#text": 15,
+                                "@@name": "cols",
+                                "@@xsi:type": "number"
+                            },
+                            {
+                                "#text": 5,
+                                "@@name": "rows",
+                                "@@xsi:type": "number"
+                            },
+                            {
+                                "#text": MagentoCommons.underscore2hump(columnDefine['@@name']),
+                                "@@name": "label",
+                                "@@translate": "true",
+                                "@@xsi:type": "string"
+                            },
+                            {
+                                "#text": "text",
+                                "@@name": "dataType",
+                                "@@translate": "true",
+                                "@@xsi:type": "string"
+                            }
+                        ]
+                    }
                 },
                 "settings": {
-                    "label": `${MagentoCommons.underscore2hump(columnDefine['@@name'])}`,
                     "dataType": "text",
                     "visible": true,
                     "dataScope": columnDefine['@@name']
-                },
-                "formElements": {
-                    "wysiwyg": {
-                        "settings": {
-                            "rows": 8,
-                            "wysiwyg": true
-                        }
-                    }
-                },
-                "@@name": columnDefine['@@name'],
-                "@@formElement": "wysiwyg"
+                }
             }
         }
         return {};
     }
 }
 
-module
-    .exports = MagentoView;
+module.exports = MagentoView;

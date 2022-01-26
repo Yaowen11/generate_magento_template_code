@@ -4,12 +4,10 @@ const os = require("os");
 
 class MagentoModel {
 
-    constructor(moduleMeta, tableName) {
-        this.tableName = tableName;
-        this.modelMeta = MagentoCommons.magentoModelMeta(tableName, moduleMeta);
-        const magentoTableMeta = MagentoCommons.magentoSchemaXmlTableMeta(path.join(moduleMeta.realPath, 'etc', 'db_schema.xml'), tableName);
-        this.tableMeta = magentoTableMeta.tableMeta;
-        this.primaryKey = magentoTableMeta.primaryKey;
+    constructor(moduleMeta, tableMeta, modelMeta) {
+        this.moduleMeta = moduleMeta;
+        this.tableMeta = tableMeta;
+        this.modelMeta = modelMeta;
     }
 
     buildModel() {
@@ -101,7 +99,7 @@ class ${this.modelMeta.resourceName} extends AbstractDb
 {
     protected function _construct()
     {
-        $this->_init('${this.tableName}', '${this.primaryKey}');
+        $this->_init('${this.tableMeta.name}', '${this.tableMeta.primaryKey}');
     }
 }`
         return this.resourceModelContent;
@@ -219,10 +217,10 @@ class ${this.modelMeta.repositoryName}
         }
     }
     
-    public function get(\$${this.primaryKey}): ${this.modelMeta.name}
+    public function get(\$${this.tableMeta.primaryKey}): ${this.modelMeta.name}
     {
         ${this.modelMeta.variable} = $this->build();
-        $this->resource${this.modelMeta.resourceName}->load(${this.modelMeta.variable}, \$${this.primaryKey}, '${this.primaryKey}');
+        $this->resource${this.modelMeta.resourceName}->load(${this.modelMeta.variable}, \$${this.tableMeta.primaryKey}, '${this.tableMeta.primaryKey}');
         return ${this.modelMeta.variable};
     }
     
@@ -272,7 +270,7 @@ class DataProvider extends AbstractDataProvider
     
     private $repository;
     
-    protected $primaryFieldName = '${this.primaryKey}';
+    protected $primaryFieldName = '${this.tableMeta.primaryKey}';
     
     public function __construct($name,
                                 $primaryFieldName,
@@ -302,7 +300,7 @@ class DataProvider extends AbstractDataProvider
         if ($requestId) {
             $post = $this-repository->get($requestId);
             if (!$post->getId()) {
-                throw new NoSuchEntityException::singleField('${this.primaryKey}', $requestId);
+                throw new NoSuchEntityException::singleField('${this.tableMeta.primaryKey}', $requestId);
             }
             $postData = $post->getData();
 `

@@ -146,7 +146,8 @@ class MagentoCommons {
                     }
                 }
                 return {
-                    tableMeta: tableDefine,
+                    name: tableName,
+                    column: tableDefine.column,
                     primaryKey: tablePrimaryKeyColumn
                 };
             } catch (e) {
@@ -154,6 +155,29 @@ class MagentoCommons {
             }
         } else {
             throw new Error('no such file db_schema.xml');
+        }
+    }
+
+    static magentoTableMetaByTableXml(tableXmlString) {
+        const xmlParser = this.getXmlParser();
+        const tableJson = xmlParser.parse(tableXmlString)
+        let tablePrimaryKeyColumn;
+        if (Array.isArray(tableJson.constraint)) {
+            for (let constraint of tableJson.constraint) {
+                if (constraint['@@referenceId'] === 'PRIMARY') {
+                    tablePrimaryKeyColumn = constraint.column['@@name'] ?? 'id';
+                    break;
+                }
+            }
+        } else {
+            if (tableJson.constraint['@@referenceId'] === 'PRIMARY') {
+                tablePrimaryKeyColumn = tableJson.constraint.column['@@name'] || 'id';
+            }
+        }
+        return {
+            name: tableJson.table['@@name'],
+            column: tableJson.table.column,
+            primaryKey: tablePrimaryKeyColumn,
         }
     }
 }

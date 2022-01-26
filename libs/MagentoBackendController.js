@@ -1,7 +1,7 @@
 const path = require('path');
 const MagentoCommons = require('./MagentoCommons');
 
-class BackendController {
+class MagentoBackendController {
 
     constructor(moduleMeta, backendUrlMeta, modelMeta) {
         this.moduleMeta = moduleMeta;
@@ -204,4 +204,4 @@ class Delete extends Base
     }
 }
 
-module.exports = BackendController;
+module.exports = MagentoBackendController;
