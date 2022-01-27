@@ -3,20 +3,19 @@ const MagentoCommons = require('./MagentoCommons');
 const os = require("os");
 
 class MagentoModel {
-    
+
     #tableMeta;
-    
+
     #modelMeta;
-    
+
     constructor(tableMeta, modelMeta) {
         this.#tableMeta = tableMeta;
         this.#modelMeta = modelMeta;
     }
 
     buildModel() {
-        MagentoCommons.syncRecursionCreateDir(this.#modelMeta.path);
-        MagentoCommons.syncRecursionCreateDir(this.#modelMeta.resourcePath);
         MagentoCommons.syncRecursionCreateDir(this.#modelMeta.collectionPath);
+        // console.log(this.#modelMeta.collectionPath);process.exit(23);
         MagentoCommons.asyncWriteFile(path.join(this.#modelMeta.path, `${this.#modelMeta.name}.php`), this.#model);
         MagentoCommons.asyncWriteFile(path.join(this.#modelMeta.path, `${this.#modelMeta.name}Factory.php`), this.#modelFactory);
         MagentoCommons.asyncWriteFile(path.join(this.#modelMeta.path, `${this.#modelMeta.repositoryName}.php`), this.#repository);

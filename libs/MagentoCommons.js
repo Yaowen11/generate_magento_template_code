@@ -206,6 +206,7 @@ class MagentoCommons {
             rootPath = __dirname;
             dirs = dirParse.dir.split(path.sep);
         }
+        dirs.push(dirParse.base);
         for (let subPath of dirs) {
             rootPath = path.join(rootPath, subPath);
             try {
