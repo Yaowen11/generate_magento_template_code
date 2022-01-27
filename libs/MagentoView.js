@@ -3,63 +3,54 @@ const MagentoCommons = require('./MagentoCommons');
 
 class MagentoView {
 
-    constructor(moduleMeta, backendUrlMeta, tableName) {
-        this.moduleMeta = moduleMeta;
-        this.backendUrlMeta = backendUrlMeta;
-        this.modelMeta = MagentoCommons.magentoModelMeta(tableName, moduleMeta);
-        this.tableMeta = MagentoCommons.magentoSchemaXmlTableMeta(path.join(moduleMeta.realPath, 'etc', 'db_schema.xml'), tableName);
-        const viewDir = path.join(moduleMeta.realPath, 'view');
-        MagentoCommons.createDirIfNotExists(viewDir);
-        this.viewAdminhtmlDir = path.join(viewDir, 'adminhtml');
-        MagentoCommons.createDirIfNotExists(this.viewAdminhtmlDir);
+    #moduleMeta;
+
+    #backendUrlMeta;
+
+    #modelMeta;
+
+    #tableMeta;
+
+    constructor(moduleMeta, backendUrlMeta, modelMeta, tableMeta) {
+        this.#moduleMeta = moduleMeta;
+        this.#backendUrlMeta = backendUrlMeta;
+        this.#modelMeta = modelMeta;
+        this.#tableMeta = tableMeta;
     }
 
     buildBackendView() {
-        this.buildLayout();
-        this.buildUiComponent();
-        this.buildComponentClass();
-    }
-
-    buildLayout() {
-        const layoutDir = path.join(this.viewAdminhtmlDir, 'layout');
-        MagentoCommons.createDirIfNotExists(layoutDir);
-        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(layoutDir, `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_index.xml`), this.viewIndexLayout);
-        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(layoutDir, `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_edit.xml`), this.viewEditLayout);
-        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(layoutDir, `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_new.xml`), this.viewEditLayout);
-    }
-
-    buildUiComponent() {
-        const uiComponentDir = path.join(this.viewAdminhtmlDir, 'ui_component');
-        MagentoCommons.createDirIfNotExists(uiComponentDir);
+        const viewAdminhtmlDir = path.join(this.#moduleMeta.realPath, 'view', 'adminhtml');
+        MagentoCommons.syncRecursionCreateDir(viewAdminhtmlDir);
+        // layout files
+        const layoutDir = path.join(viewAdminhtmlDir, 'layout');
+        MagentoCommons.syncRecursionCreateDir(layoutDir);
+        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(layoutDir, `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_index.xml`), this.#viewIndexLayout);
+        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(layoutDir, `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_edit.xml`), this.#viewEditLayout);
+        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(layoutDir, `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_new.xml`), this.#viewEditLayout);
+        // ui component files
+        const componentDir = path.join(viewAdminhtmlDir, 'ui_component');
+        MagentoCommons.syncRecursionCreateDir(componentDir);
         const xmlBuilder = MagentoCommons.getXmlBuilder();
-        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(uiComponentDir, `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_listing.xml`), xmlBuilder.build(this.uiComponentList));
-        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(uiComponentDir, `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_form.xml`), xmlBuilder.build(this.uiComponentForm));
-    }
-
-    buildComponentClass() {
-        const uiDir = path.join(this.moduleMeta.realPath, 'Ui');
-        MagentoCommons.createDirIfNotExists(uiDir);
-        const uiComponentDir = path.join(uiDir, 'Component');
-        MagentoCommons.createDirIfNotExists(uiComponentDir);
-        const uiComponentListingDir = path.join(uiComponentDir, 'Listing');
-        MagentoCommons.createDirIfNotExists(uiComponentListingDir);
-        const uiComponentListingColumnDir = path.join(uiComponentListingDir, 'Column');
-        MagentoCommons.createDirIfNotExists(uiComponentListingColumnDir);
-        for (let columnDefine of this.tableMeta.column) {
-            const columnClassContent = this.componentColumnClassContent(columnDefine);
+        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(componentDir, `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_listing.xml`), xmlBuilder.build(this.#uiComponentList));
+        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(componentDir, `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form.xml`), xmlBuilder.build(this.#uiComponentForm));
+        // ui component column class
+        const uiComponentListingColumnDir = path.join(this.#moduleMeta.realPath, 'Ui', 'Component', 'Listing', 'Column');
+        MagentoCommons.syncRecursionCreateDir(uiComponentListingColumnDir);
+        for (let columnDefine of this.#tableMeta.column) {
+            const columnClassContent = this.#componentColumnClassContent(columnDefine);
             if (Object.getOwnPropertyNames(columnClassContent).length > 0) {
                 MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(uiComponentListingColumnDir, columnClassContent.file), columnClassContent.content);
             }
         }
     }
 
-    componentColumnClassContent(columnDefine) {
+    #componentColumnClassContent(columnDefine) {
         if (columnDefine['@@name'].includes("image")) {
             return {
                 file: `${MagentoCommons.underscore2hump(columnDefine['@@name'])}Thumbnail.php`,
                 content: `<?php
 
-namespace ${this.moduleMeta.namespace}\\Ui\\Component\\Listing\\Column;
+namespace ${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column;
 
 use Magento\\Catalog\\Ui\\Component\\Listing\\Columns\\Thumbnail;
 
@@ -86,7 +77,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])}Thumbnail extends
             }
             let content = `<?php
 
-namespace ${this.moduleMeta.namespace}\\Ui\\Component\\Listing\\Column;
+namespace ${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column;
 
 use Magento\\Framework\\Data\\OptionSourceInterface;
 
@@ -100,14 +91,14 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
             for (let valueName of columnDefine['@@comment'].split(',')) {
                 let [value, name] = valueName.split(':');
                 content +=
-`           [
+                    `           [
                 'value' => ${value},
                 'label' => '${name.toUpperCase()} ${columnDefine['@@name'].toUpperCase()}'
             ],
 `
             }
             content +=
-`       ];
+                `       ];
     }
     
     public function toArray(): array
@@ -117,11 +108,11 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
             for (let valueName of columnDefine['@@comment'].split(',')) {
                 let [value, name] = valueName.split(':');
                 content +=
-`           ${value} => '${name.toUpperCase()} ${columnDefine['@@name'].toUpperCase()}',
+                    `           ${value} => '${name.toUpperCase()} ${columnDefine['@@name'].toUpperCase()}',
 `
             }
             content +=
-`       ];
+                `       ];
     }
 }
 `
@@ -131,30 +122,30 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
         return {};
     }
 
-    get viewIndexLayout() {
+    get #viewIndexLayout() {
         return `<?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="content">
-            <uiComponent name="${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_listing"/>
+            <uiComponent name="${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_listing"/>
         </referenceContainer>
     </body>
 </page>`
     }
 
-    get viewEditLayout() {
+    get #viewEditLayout() {
         return `<?xml version="1.0"?>
 <page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
     <body>
         <referenceContainer name="content">
-            <uiComponent name="${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_form"/>
+            <uiComponent name="${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form"/>
         </referenceContainer>
     </body>
 </page>
 `
     }
 
-    get uiComponentList() {
+    get #uiComponentList() {
         const uiComponentListContentJson = {
             "?xml": {
                 "@@version": "1.0"
@@ -167,12 +158,12 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                         {
                             "item": [
                                 {
-                                    "#text": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_listing.${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_listing_data_source`,
+                                    "#text": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_listing.${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_listing_data_source`,
                                     "@@name": "provider",
                                     "@@xsi:type": "string"
                                 },
                                 {
-                                    "#text": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_listing.${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_listing_data_source`,
+                                    "#text": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_listing.${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_listing_data_source`,
                                     "@@name": "deps",
                                     "@@xsi:type": "string"
                                 }
@@ -181,7 +172,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                             "@@xsi:type": "array"
                         },
                         {
-                            "#text": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_columns`,
+                            "#text": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_columns`,
                             "@@name": "spinner",
                             "@@xsi:type": "string"
                         },
@@ -221,18 +212,18 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     "@@xsi:type": "array"
                 },
                 "dataSource": {
-                    "@@name": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_listing_data_source`,
+                    "@@name": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_listing_data_source`,
                     "@@component": "Magento_Ui/js/grid/provider",
                     "argument": [
                         {
                             "argument": [
                                 {
-                                    "#text": `${this.moduleMeta.namespace}\\Ui\\Component\\DataProvider\\${this.backendUrlMeta.controller}DataProvider`,
+                                    "#text": `${this.#moduleMeta.namespace}\\Ui\\Component\\DataProvider\\${this.#backendUrlMeta.controller}DataProvider`,
                                     "@@name": "class",
                                     "@@xsi:type": "string"
                                 },
                                 {
-                                    "#text": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_listing_data_source`,
+                                    "#text": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_listing_data_source`,
                                     "@@name": "name",
                                     "@@xsi:type": "string"
                                 },
@@ -309,7 +300,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     "@@name": "listing_top"
                 },
                 "columns": {
-                    "@@name": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_columns`,
+                    "@@name": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_columns`,
                     "column": [],
                     "actionsColumn": {
                         "argument": {
@@ -338,13 +329,13 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                             "@@xsi:type": "array"
                         },
                         "@@name": "actions",
-                        "@@class": `${this.moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${MagentoCommons.underscore2hump(this.backendUrlMeta.controller)}Actions`
+                        "@@class": `${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${MagentoCommons.underscore2hump(this.#backendUrlMeta.controller)}Actions`
                     }
                 }
             }
         }
-        for (let columnDefine of this.tableMeta.column) {
-            let listColumn = this.buildListColumn(columnDefine);
+        for (let columnDefine of this.#tableMeta.column) {
+            let listColumn = this.#buildListColumn(columnDefine);
             if (Object.getOwnPropertyNames(listColumn).length > 0) {
                 uiComponentListContentJson["listing"]["columns"]["column"].push(listColumn);
             }
@@ -353,9 +344,9 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
         return uiComponentListContentJson;
     }
 
-    buildListColumn(columnDefine) {
+    #buildListColumn(columnDefine) {
         const translateName = MagentoCommons.underscore2hump(columnDefine['@@name']);
-        if (columnDefine['@@name'] === this.tableMeta.primaryKey) {
+        if (columnDefine['@@name'] === this.#tableMeta.primaryKey) {
             return {
                 "@@name": columnDefine['@@name'],
                 "settings": {
@@ -371,7 +362,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
             };
         }
         if (columnDefine['@@xsi:type'].includes('tinyint') && columnDefine['@@comment'].includes('0:')) {
-            const optionsClass = `${this.moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${translateName}`
+            const optionsClass = `${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${translateName}`
             return {
                 "@@name": columnDefine['@@name'],
                 "argument": {
@@ -449,14 +440,14 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     "sortable": false
                 },
                 "@@component": "Magento_Ui/js/grid/columns/thumbnail",
-                "@@class": `${this.moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${translateName}Thumbnail`
+                "@@class": `${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${translateName}Thumbnail`
             }
 
         }
         return {};
     }
 
-    get uiComponentForm() {
+    get #uiComponentForm() {
         const uiComponentFormJson = {
             "?xml": {
                 "@@version": "1.0",
@@ -467,7 +458,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     "item": [
                         {
                             "item": {
-                                "#text": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_form.${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_form_data_source`,
+                                "#text": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form.${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form_data_source`,
                                 "@@name": "provider",
                                 "@@xsi:type": "string"
                             },
@@ -475,7 +466,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                             "@@xsi:type": "array"
                         },
                         {
-                            "#text": `${MagentoCommons.underscore2hump(this.backendUrlMeta.route)} ${MagentoCommons.underscore2hump(this.backendUrlMeta.controller)}`,
+                            "#text": `${MagentoCommons.underscore2hump(this.#backendUrlMeta.route)} ${MagentoCommons.underscore2hump(this.#backendUrlMeta.controller)}`,
                             "@@name": "label",
                             "@@xsi:type": "string",
                             "@@translate": "true"
@@ -506,10 +497,10 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                             }
                         ]
                     },
-                    "namespace": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_form`,
+                    "namespace": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form`,
                     "dataScope": "data",
                     "deps": {
-                        "dep": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_form.${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_form_data_source`
+                        "dep": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form.${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form_data_source`
                     }
                 },
                 "dataSource": {
@@ -528,35 +519,35 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     },
                     "settings": {
                         "submitUrl": {
-                            "@@path": `${this.backendUrlMeta.url}/save`
+                            "@@path": `${this.#backendUrlMeta.url}/save`
                         }
                     },
                     "dataProvider": {
                         "settings": {
-                            "requestFieldName": `${this.tableMeta.primaryKey ?? 'id'}`,
-                            "primaryFieldName": `${this.tableMeta.primaryKey ?? 'id'}`
+                            "requestFieldName": `${this.#tableMeta.primaryKey ?? 'id'}`,
+                            "primaryFieldName": `${this.#tableMeta.primaryKey ?? 'id'}`
                         },
-                        "@@class": `${this.modelMeta.collectionNamespace}\\DataProvider`,
-                        "@@name": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_form_data_source`
+                        "@@class": `${this.#modelMeta.collectionNamespace}\\DataProvider`,
+                        "@@name": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form_data_source`
                     },
-                    "@@name": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_form_data_source`
+                    "@@name": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form_data_source`
                 },
                 "fieldset": {
                     "settings": {
                         "label": {
-                            "#text": `${MagentoCommons.underscore2hump(this.backendUrlMeta.route)} ${MagentoCommons.underscore2hump(this.backendUrlMeta.controller)} Information`,
+                            "#text": `${MagentoCommons.underscore2hump(this.#backendUrlMeta.route)} ${MagentoCommons.underscore2hump(this.#backendUrlMeta.controller)} Information`,
                             "@@translate": "false"
                         }
                     },
                     "field": [],
-                    "@@name": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}_form`
+                    "@@name": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form`
                 },
                 "@@xmlns:xsi": "http://www.w3.org/2001/XMLSchema-instance",
                 "@@xsi:noNamespaceSchemaLocation": "urn:magento:module:Magento_Ui:etc/ui_configuration.xsd"
             }
         };
-        for (let columnDefine of this.tableMeta.column) {
-            const formColumn = this.buildFormColumn(columnDefine);
+        for (let columnDefine of this.#tableMeta.column) {
+            const formColumn = this.#buildFormColumn(columnDefine);
             if (Object.getOwnPropertyNames(formColumn).length > 0) {
                 uiComponentFormJson["form"]["fieldset"]["field"].push(formColumn);
             }
@@ -564,14 +555,14 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
         return uiComponentFormJson;
     }
 
-    buildFormColumn(columnDefine) {
-        if (columnDefine['@@name'] === this.tableMeta.primaryKey) {
+    #buildFormColumn(columnDefine) {
+        if (columnDefine['@@name'] === this.#tableMeta.primaryKey) {
             return {
                 "argument": {
                     "item": {
                         "item": [
                             {
-                                "#text": `${this.backendUrlMeta.route}_${this.backendUrlMeta.controller}`,
+                                "#text": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}`,
                                 "@@name": "source",
                                 "@@xsi:type": "string"
                             },
@@ -591,7 +582,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                 "settings": {
                     "dataType": "text"
                 },
-                "@@name": `${this.tableMeta.primaryKey}`,
+                "@@name": `${this.#tableMeta.primaryKey}`,
                 "@@formElement": "hidden"
             }
         }
@@ -664,7 +655,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     "select": {
                         "settings": {
                             "options": {
-                                "@@class": `${this.moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${MagentoCommons.underscore2hump(columnDefine['@@name'])}`
+                                "@@class": `${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${MagentoCommons.underscore2hump(columnDefine['@@name'])}`
                             }
                         }
                     }
@@ -825,6 +816,41 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     "visible": true,
                     "dataScope": columnDefine['@@name']
                 }
+            }
+        }
+        if (columnDefine['@@name'].includes('image')) {
+            return {
+                "settings": {
+                    "label": {
+                        "#text": `${MagentoCommons.underscore2hump(columnDefine['@@name'])}`,
+                        "@@translate": "true"
+                    },
+                    "componentType": "imageUploader",
+                    "validation": {
+                        "rule": {
+                            "#text": true,
+                            "@@name": "required-entry",
+                            "@@xsi:type": "boolean"
+                        }
+                    }
+                },
+                "formElements": {
+                    "imageUploader": {
+                        "settings": {
+                            "allowedExtensions": "jpg jpeg gif png",
+                            "maxFileSize": 5242880,
+                            "uploaderConfig": {
+                                "param": {
+                                    "#text": `${this.#backendUrlMeta.url}/upload`,
+                                    "@@xsi:type": "string",
+                                    "@@name": "url"
+                                }
+                            }
+                        }
+                    }
+                },
+                "@@name": columnDefine['@@name'],
+                "@@formElement": "imageUploader"
             }
         }
         return {};

@@ -4,28 +4,29 @@ const Commons = require('./MagentoCommons');
 
 class MagentoModule {
 
+    #moduleMeta;
+    
     constructor(moduleMeta) {
-        this.meta = moduleMeta;
+        this.#moduleMeta = moduleMeta;
     }
 
     initMagentoModule() {
-        if (!this.moduleExists()) {
-            const appPointAt = this.meta.realPath.search('app');
-            const basePath = this.meta.realPath.slice(0, appPointAt);
+        if (!this.#moduleExists()) {
+            const appPointAt = this.#moduleMeta.realPath.search('app');
+            const basePath = this.#moduleMeta.realPath.slice(0, appPointAt);
             fs.stat(basePath, ((err, stats) => {
                 if (stats.isDirectory()) {
-                    const appPath = path.join(basePath, 'app');
-                    Commons.createDirIfNotExists(appPath);
-                    const appCodePath = path.join(appPath, 'code');
-                    Commons.createDirIfNotExists(appCodePath);
-                    const modulePath = path.join(appCodePath, this.meta.moduleName);
-                    Commons.createDirIfNotExists(modulePath);
-                    const packagePath = path.join(modulePath, this.meta.packageName);
-                    Commons.createDirIfNotExists(packagePath);
-                    this.initComposerJsonFile();
-                    this.initRegistrationPhp();
-                    this.initModuleXml();
-
+                    const packagePath = path.join(basePath, 'app', 'code', this.#moduleMeta.moduleName, this.#moduleMeta.packageName);
+                    Commons.syncRecursionCreateDir(packagePath);
+                    // init module composer json
+                    Commons.asyncWriteFile(path.join(this.#moduleMeta.realPath, 'composer.json'), JSON.stringify(this.#composerJson, null, 4));
+                    // init registration php
+                    Commons.asyncWriteFile(path.join(this.#moduleMeta.realPath, 'registration.php'), this.#registration);
+                    // init module xml
+                    const etcPath = path.join(this.#moduleMeta.realPath, 'etc');
+                    Commons.createDirIfNotExists(etcPath);
+                    const moduleXml = path.join(etcPath, 'module.xml')
+                    Commons.asyncWriteFile(moduleXml, this.#moduleXml);
                 } else {
                     throw new Error('magento project dir not exists!')
                 }
@@ -33,20 +34,19 @@ class MagentoModule {
         }
     }
 
-    get moduleXml() {
-        this.moduleXmlContent = `<?xml version="1.0"?>
+    get #moduleXml() {
+        return `<?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
-    <module name="${this.meta.name}"/>
+    <module name="${this.#moduleMeta.name}"/>
 </config>
 `
-        return this.moduleXmlContent;
     }
 
-    get composerJson() {
-        const psr4 = `${this.meta.moduleName}\\${this.meta.packageName}\\`
-        this.composerJsonContent = {
-            "name": `${this.meta.moduleName[0].toLowerCase()}${this.meta.moduleName.slice(1)}/${this.meta.packageName[0].toLowerCase()}${this.meta.packageName.slice(1)}`,
+    get #composerJson() {
+        const psr4 = `${this.#moduleMeta.moduleName}\\${this.#moduleMeta.packageName}\\`
+        let composerJsonContent = {
+            "name": `${this.#moduleMeta.moduleName[0].toLowerCase()}${this.#moduleMeta.moduleName.slice(1)}/${this.#moduleMeta.packageName[0].toLowerCase()}${this.#moduleMeta.packageName.slice(1)}`,
             "version": "1.0.0",
             "description": "N/A",
             "type": "magento2-module",
@@ -63,39 +63,21 @@ class MagentoModule {
                 "psr-4": {}
             }
         }
-        this.composerJsonContent.autoload['psr-4'][psr4] = "";
-        return this.composerJsonContent;
+        composerJsonContent.autoload['psr-4'][psr4] = "";
+        return composerJsonContent;
     }
 
-    get registration() {
-        this.registrationContent = `<?php
+    get #registration() {
+        return `<?php
 
 use Magento\\Framework\\Component\\ComponentRegistrar;
 
-ComponentRegistrar::register(ComponentRegistrar::MODULE, '${this.meta.name}', __DIR__);`
-        return this.registrationContent;
+ComponentRegistrar::register(ComponentRegistrar::MODULE, '${this.#moduleMeta.name}', __DIR__);`
     }
 
-    initComposerJsonFile() {
-        const composerJsonFile = path.join(this.meta.realPath, 'composer.json');
-        Commons.asyncWriteFile(composerJsonFile, JSON.stringify(this.composerJson, null, 4));
-    }
-
-    initRegistrationPhp() {
-        const registrationPhp = path.join(this.meta.realPath, 'registration.php');
-        Commons.asyncWriteFile(registrationPhp, this.registration);
-    }
-
-    initModuleXml() {
-        const etcPath = path.join(this.meta.realPath, 'etc');
-        Commons.createDirIfNotExists(etcPath);
-        const moduleXml = path.join(etcPath, 'module.xml')
-        Commons.asyncWriteFile(moduleXml, this.moduleXml);
-    }
-
-    moduleExists() {
+    #moduleExists() {
         try {
-            fs.accessSync(this.meta.realPath, fs.constants.R_OK | fs.constants.W_OK);
+            fs.accessSync(this.#moduleMeta.realPath, fs.constants.R_OK | fs.constants.W_OK);
             return true;
         } catch (err) {
             return false;

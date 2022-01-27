@@ -145,11 +145,18 @@ class MagentoCommons {
                         tablePrimaryKeyColumn = tableDefine.constraint.column['@@name'] || 'id';
                     }
                 }
-                return {
+                const tableMeta = {
                     name: tableName,
                     column: tableDefine.column,
-                    primaryKey: tablePrimaryKeyColumn
-                };
+                    primaryKey: tablePrimaryKeyColumn,
+                }
+                if ('constraint' in tableDefine) {
+                    tableMeta.constraint = tableDefine.constraint
+                }
+                if ('index' in tableDefine) {
+                    tableMeta.index = tableDefine.index;
+                }
+                return tableMeta;
             } catch (e) {
                 throw new Error('table not define primary key constraint')
             }
@@ -162,23 +169,54 @@ class MagentoCommons {
         const xmlParser = this.getXmlParser();
         const tableJson = xmlParser.parse(tableXmlString)
         let tablePrimaryKeyColumn;
-        if (Array.isArray(tableJson.constraint)) {
-            for (let constraint of tableJson.constraint) {
+        if (Array.isArray(tableJson.table.constraint)) {
+            for (let constraint of tableJson.table.constraint) {
                 if (constraint['@@referenceId'] === 'PRIMARY') {
                     tablePrimaryKeyColumn = constraint.column['@@name'] ?? 'id';
                     break;
                 }
             }
         } else {
-            if (tableJson.constraint['@@referenceId'] === 'PRIMARY') {
-                tablePrimaryKeyColumn = tableJson.constraint.column['@@name'] || 'id';
+            if (tableJson.table.constraint['@@referenceId'] === 'PRIMARY') {
+                tablePrimaryKeyColumn = tableJson.table.constraint.column['@@name'] || 'id';
             }
         }
-        return {
+        const tableMeta = {
             name: tableJson.table['@@name'],
-            column: tableJson.table.column,
-            primaryKey: tablePrimaryKeyColumn,
+            column: tableJson.table['column'],
+            primaryKey: tablePrimaryKeyColumn
+        };
+        if ('constraint' in tableJson) {
+            tableMeta.constraint = tableJson.constraint;
         }
+        if ('index' in tableJson) {
+            tableMeta.index = tableJson.index;
+        }
+        return tableMeta;
+    }
+
+    static syncRecursionCreateDir(dir) {
+        const dirParse = path.parse(dir);
+        let dirs;
+        let rootPath;
+        if (dirParse.root !== '') {
+            rootPath = dirParse.root;
+            dirs = dirParse.dir.substr(rootPath.length).split(path.sep);
+        } else {
+            rootPath = __dirname;
+            dirs = dirParse.dir.split(path.sep);
+        }
+        for (let subPath of dirs) {
+            rootPath = path.join(rootPath, subPath);
+            try {
+                if (!fs.statSync(rootPath).isDirectory()) {
+                    fs.mkdirSync(rootPath);
+                }
+            } catch (err) {
+                fs.mkdirSync(rootPath);
+            }
+        }
+
     }
 }
 
