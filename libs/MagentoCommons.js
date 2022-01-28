@@ -219,6 +219,10 @@ class MagentoCommons {
         }
 
     }
+
+    static recursionDelDir(dir) {
+
+    }
 }
 
 module.exports = MagentoCommons

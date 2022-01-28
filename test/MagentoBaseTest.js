@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const tar = require('tar');
+
 
 const BackendGrid = require(path.join(__dirname, 'libs', 'MagentoBackendGrid.js'));
 const Commons = require(path.join(__dirname, 'libs', 'MagentoCommons.js'));
@@ -43,19 +43,20 @@ class MagentoBaseTest {
     }
 
     generateModuleGridZipFileTest() {
-
         const grid = new BackendGrid(this.#moduleMeta, this.#gridUrlMeta, this.#tableDefine);
+        const file = `${this.#gridUrlMeta.route}_${this.#gridUrlMeta.controller}_grid.tgz`;
         this.packagePromise(grid, grid.generateModuleGridZipFile)
             .then(() => {
-                tar.c({
-                    gzip: false,
-                    file: `${this.#gridUrlMeta.url.replace('/', '_')}_grid.tar`
-                }, [this.#moduleMeta.realpath])
+                fs.promises.stat(file).then(stat => {
+                    if (stat.isFile() && stat.size > 0) {
+                        console.log('MagentoBackendGrid.generateModuleGridZipFile test successful');
+                        // fs.unlink(file, err => {throw err;});
+                    }
+                })
             })
             .catch((err) => {
                 console.log('MagentoBackendGrid.generateModuleGridZipFile test failed ' + err)
             })
-
     }
 
     packagePromise(obj, callback, ...args) {
