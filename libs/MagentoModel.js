@@ -15,7 +15,6 @@ class MagentoModel {
 
     buildModel() {
         MagentoCommons.syncRecursionCreateDir(this.#modelMeta.collectionPath);
-        // console.log(this.#modelMeta.collectionPath);process.exit(23);
         MagentoCommons.asyncWriteFile(path.join(this.#modelMeta.path, `${this.#modelMeta.name}.php`), this.#model);
         MagentoCommons.asyncWriteFile(path.join(this.#modelMeta.path, `${this.#modelMeta.name}Factory.php`), this.#modelFactory);
         MagentoCommons.asyncWriteFile(path.join(this.#modelMeta.path, `${this.#modelMeta.repositoryName}.php`), this.#repository);
@@ -144,7 +143,7 @@ class CollectionFactory
     
     public function create(array $data = []): ${this.#modelMeta.collectionName}
     {
-        return $this->objectManager->create($this->instanceName, array);
+        return $this->objectManager->create($this->instanceName, $data);
     }
 }
 `
@@ -280,21 +279,21 @@ class DataProvider extends AbstractDataProvider
         parent::__construct($name, $primaryFieldName, $requestFieldName, $meta, $data);
         $this->request = $request;
         $this->collection = $collection;
-        $this->repository = $rantionBannerRepository;
+        $this->repository = ${this.#modelMeta.repositoryVariable};
     }
     
     /**
      * @throws NoSuchEntityException
      */
-    public function getData(): array()
+    public function getData(): array
     {
         if (isset($this->loadedData)) {
             return $this->loadedData;
         }
         $this->loadedData = [];
-        $requestId = $this-request->getParam($this-requestFieldName);
+        $requestId = $this->request->getParam($this->requestFieldName);
         if ($requestId) {
-            $post = $this-repository->get($requestId);
+            $post = $this->repository->get($requestId);
             if (!$post->getId()) {
                 throw new NoSuchEntityException::singleField('${this.#tableMeta.primaryKey}', $requestId);
             }
@@ -314,6 +313,7 @@ class DataProvider extends AbstractDataProvider
                 $postData['${column['@@name']}'] = \$${column['@@name']};                
 `
                 dataProviderContent += `
+            }
             $this->loadedData[$requestId] = $postData;
         }
         return $this->loadedData;

@@ -24,7 +24,7 @@ class MagentoModule {
                     Commons.asyncWriteFile(path.join(this.#moduleMeta.realPath, 'registration.php'), this.#registration);
                     // init module xml
                     const etcPath = path.join(this.#moduleMeta.realPath, 'etc');
-                    Commons.createDirIfNotExists(etcPath);
+                    Commons.syncRecursionCreateDir(etcPath);
                     const moduleXml = path.join(etcPath, 'module.xml')
                     Commons.asyncWriteFile(moduleXml, this.#moduleXml);
                 } else {

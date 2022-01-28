@@ -4,6 +4,9 @@ const MagentoBackendController = require('./MagentoController');
 const MagentoModel = require('./MagentoModel');
 const MagentoView = require('./MagentoView');
 const MagentoModule = require('./MagentoModule');
+const zlib = require('zlib');
+const fs = require('fs');
+const path = require("path");
 
 class MagentoBackendGrid {
 
@@ -27,10 +30,20 @@ class MagentoBackendGrid {
     }
 
     generateModuleGridZipFile() {
+        this.#generateModuleGridFiles().then(() => {
+            const gzip = zlib.createGzip();
+            const outputFile = fs.createWriteStream(path.join(__dirname, `${this.#tableMeta.name}_grid.gz`));
+
+        }).catch(err => {
+            throw err;
+        })
+    }
+
+    async #generateModuleGridFiles() {
         const module = new MagentoModule(this.#moduleMeta);
-        module.initMagentoModule();
+        await module.initMagentoModule();
         const magentoModel = new MagentoModel(this.#tableMeta, this.#modelMeta);
-        magentoModel.buildModel();
+        await magentoModel.buildModel();
         const magentoController = new MagentoBackendController(this.#moduleMeta, this.#modelMeta);
         let imageColumn = '';
         for (let column of this.#tableMeta.column) {
@@ -38,11 +51,11 @@ class MagentoBackendGrid {
                 imageColumn = column['@@name'];
             }
         }
-        magentoController.buildBackendController(this.#gridUrlMeta, imageColumn);
+        await magentoController.buildBackendController(this.#gridUrlMeta, imageColumn);
         const magentoView = new MagentoView(this.#moduleMeta, this.#gridUrlMeta, this.#modelMeta, this.#tableMeta);
-        magentoView.buildBackendView();
+        await magentoView.buildBackendView();
         const magentoConfigXml = new MagentoConfigXml(this.#moduleMeta);
-        magentoConfigXml.buildAdminGridXml(this.#gridUrlMeta, this.#tableMeta, imageColumn);
+        await magentoConfigXml.buildAdminGridXml(this.#gridUrlMeta, this.#tableMeta, imageColumn);
     }
 }
 

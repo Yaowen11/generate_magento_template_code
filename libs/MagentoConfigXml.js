@@ -28,7 +28,6 @@ class MagentoConfigXml {
             '@@parent': 'Magento_Backend::marketing',
             '@@resource': `${this.#moduleMeta.name}::main`
         };
-        this.#buildAdminhtmlMenuXml(menuModuleManItem);
         const controllerMenuItem = {
             '@@id': `${this.#moduleMeta.name}::${gridUrlMeta.controller}`,
             '@@title': `${this.#moduleMeta.name.replace('_', ' ')} ${gridUrlMeta.controller.substr(0, 1).toUpperCase()}${gridUrlMeta.controller.slice(1)}`,
@@ -38,10 +37,12 @@ class MagentoConfigXml {
             '@@action': `${gridUrlMeta.url}/index`,
             '@@resource': `${this.#moduleMeta.name}::${gridUrlMeta.controller}`,
         };
-        this.#buildAdminhtmlMenuXml(controllerMenuItem);
+        this.#buildAdminhtmlMenuXml(menuModuleManItem, controllerMenuItem);
+
         this.#buildAdminhtmlRoute(gridUrlMeta.route).catch(err => {
             throw err;
         })
+
         const gridResourceAcl = {
             '@@id': "Magento_Backend::admin",
             'resource': {
@@ -59,6 +60,7 @@ class MagentoConfigXml {
             }
         };
         this.#buildAclXml(gridResourceAcl);
+
         const collectionName = `${gridUrlMeta.route.substr(0, 1).toUpperCase()}${gridUrlMeta.route.slice(1)}`
         const collectionFactoryType = {
             type: "type",
@@ -77,9 +79,6 @@ class MagentoConfigXml {
                 }
             }
         };
-        this.#buildDiXml(collectionFactoryType).catch(err => {
-            throw err;
-        });
         const collectionVirtualType = {
             type: "virtualType",
             content: {
@@ -101,11 +100,8 @@ class MagentoConfigXml {
                 }
             }
         }
-        this.#buildDiXml(collectionVirtualType).catch(err => {
-            throw err;
-        })
         if (imageColumn) {
-            const uploadVirtualTypeName = `${imageColumn.substr(0).toUpperCase()}${imageColumn.slice(1)}ImageUploader`;
+            const uploadVirtualTypeName = `${MagentoCommons.underscore2hump(imageColumn)}ImageUploader`;
             const uploaderVirtualType = {
                 type: 'virtualType',
                 content: {
@@ -147,9 +143,6 @@ class MagentoConfigXml {
                     }
                 }
             };
-            this.#buildDiXml(uploaderVirtualType).catch(err => {
-                throw err;
-            });
             const imageUploadType = {
                 type: 'type',
                 content: {
@@ -163,7 +156,11 @@ class MagentoConfigXml {
                     }
                 }
             }
-            this.#buildDiXml(imageUploadType).catch(err => {
+            this.#buildDiXml(collectionFactoryType, collectionVirtualType, uploaderVirtualType, imageUploadType).catch(err => {
+                throw err;
+            });
+        } else {
+            this.#buildDiXml(collectionFactoryType, collectionVirtualType).catch(err => {
                 throw err;
             });
         }
@@ -171,7 +168,7 @@ class MagentoConfigXml {
 
     #buildAclXml(item) {
         const etcPath = path.join(this.#moduleMeta.realPath, 'etc');
-        MagentoCommons.createDirIfNotExists(etcPath);
+        MagentoCommons.syncRecursionCreateDir(etcPath);
         const aclXmlFile = path.join(etcPath, 'acl.xml');
         fs.readFile(aclXmlFile, (err, data) => {
             if (err) {
@@ -216,21 +213,32 @@ class MagentoConfigXml {
             return;
         }
         const etcPath = path.join(this.#moduleMeta.realPath, 'etc');
-        MagentoCommons.createDirIfNotExists(etcPath);
+        MagentoCommons.syncRecursionCreateDir(etcPath);
         const dbSchemaXmlFile = path.join(etcPath, 'db_schema.xml');
         const initSchemaContent = `<?xml version="1.0"?>
 <schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
 </schema>
 `;
-        const data = await fs.promises.readFile(dbSchemaXmlFile, 'utf8').then((data) => {
+        const dbSchemaXmlData = await fs.promises.readFile(dbSchemaXmlFile, 'utf8').then((data) => {
             if (!data) {
                 return initSchemaContent;
             }
+            return data;
         }).catch(() => {
             return initSchemaContent;
-        })
-        const schemaContent = this.#xmlParser.parse(data);
+        });
+        const tableSchema = {
+            '@@name': tableNode['name'],
+            'column': tableNode['column']
+        };
+        if ('constraint' in tableNode) {
+            tableSchema['constraint'] = tableNode['constraint'];
+        }
+        if ('index' in tableNode) {
+            tableSchema['index'] = tableNode['index'];
+        }
+        const schemaContent = this.#xmlParser.parse(dbSchemaXmlData);
         const newTableNode = [];
         if ('table' in schemaContent.schema) {
             if (Array.isArray(schemaContent.schema.table)) {
@@ -239,7 +247,7 @@ class MagentoConfigXml {
                 newTableNode.push(schemaContent.schema.table);
             }
         }
-        newTableNode.push(tableNode);
+        newTableNode.push(tableSchema);
         const tableMap = new Map();
         for (let tableDefine of newTableNode) {
             tableMap.set(tableDefine.name, tableDefine);
@@ -253,11 +261,8 @@ class MagentoConfigXml {
         this.#flushDbSchemaWhitelistJson(newTableNode);
     }
 
-    /**
-     * @param {{"@@title": string, "@@id": string, "@@translate": string, "@@module": string, "@@resource": string, "@@parent": string}} addItem
-     */
-    #buildAdminhtmlMenuXml(addItem) {
-        if (!addItem) {
+    #buildAdminhtmlMenuXml(...addItems) {
+        if (!addItems) {
             return
         }
         const initMenuXmlContent = `<?xml version="1.0"?>
@@ -270,14 +275,18 @@ class MagentoConfigXml {
         MagentoCommons.syncRecursionCreateDir(adminhtmlDir);
         const menuXml = path.join(adminhtmlDir, 'menu.xml');
         fs.readFile(menuXml, (err, data) => {
-            if (err) {
+            if (err || !data) {
                 data = initMenuXmlContent;
             }
             const menuContent = this.#xmlParser.parse(data);
             const originMenu = menuContent['config']['menu'];
             if (originMenu === '') {
                 menuContent['config']['menu'] = {};
-                menuContent['config']['menu']['add'] = addItem;
+                if (addItems.length > 1) {
+                    menuContent['config']['menu']['add'] = Array.from(addItems);
+                } else {
+                    menuContent['config']['menu']['add'] = addItems;
+                }
             } else {
                 const originAddItem = menuContent.config['menu']['add'];
                 const addItemMap = new Map();
@@ -290,8 +299,10 @@ class MagentoConfigXml {
                 } else {
                     addItemMap.set(menuContent['config']['menu']['add']['@@id'], menuContent['config']['menu']['add']);
                 }
-                if (!addItemMap.has(addItem['@@id'])) {
-                    addItemMap.set(addItem['@@id'], addItem);
+                for (let inputAddItem of addItems) {
+                    if (!addItemMap.has(inputAddItem['@@id'])) {
+                        addItemMap.set(inputAddItem['@@id'], inputAddItem);
+                    }
                 }
                 menuContent['config']['menu']['add'] = Array.from(addItemMap.values());
             }
@@ -299,17 +310,13 @@ class MagentoConfigXml {
         });
     }
 
-    /**
-     * @param {{type:string,content:{}}}item
-     * @returns {Promise<void>}
-     */
-    async #buildDiXml(item) {
-        const diConfigTypes = ['type', 'virtualType', 'preference'];
-        if (!item || !item.content || !item.type || !diConfigTypes.includes(item.type)) {
+    async #buildDiXml(...items) {
+        if (!items) {
             return;
         }
+        const diConfigTypes = ['type', 'virtualType', 'preference'];
         const etcPath = path.join(this.#moduleMeta.realPath, 'etc');
-        MagentoCommons.createDirIfNotExists(etcPath);
+        MagentoCommons.syncRecursionCreateDir(etcPath);
         const diXml = path.join(etcPath, 'di.xml');
         const initDiXml = `<?xml version="1.0"?>
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
@@ -317,85 +324,55 @@ class MagentoConfigXml {
 `
         const diXmlContent = await fs.promises.readFile(diXml, 'utf8').then(data => data).catch(() => initDiXml);
         const diJsonContent = this.#xmlParser.parse(diXmlContent);
-        let typeContent;
-        if (item.type in diJsonContent.config) {
-            if (Array.isArray(diJsonContent.config[item.type])) {
-                typeContent = Array.of(item.content, ...diJsonContent.config[item.type]);
+        for (let item of items) {
+            if (item.type in diJsonContent.config) {
+                if (Array.isArray(diJsonContent.config[item.type])) {
+                    diJsonContent.config[item.type] = Array.of(item.content, ...diJsonContent.config[item.type]);
+                } else {
+                    diJsonContent.config[item.type] = Array.of(diJsonContent.config[item.type], item.content);
+                }
             } else {
-                typeContent = Array.of(diJsonContent.config[item.type], item.content);
+                diJsonContent.config[item.type] = item.content;
             }
-        } else {
-            typeContent = item.content;
         }
-        diJsonContent.config[item.type] = typeContent;
         const xmlContent = this.#xmlBuilder.build(diJsonContent);
         MagentoCommons.asyncWriteFile(diXml, xmlContent);
     }
 
-    async buildAdminhtmlSystemXml(item) {
-        const initSystemXml = `<?xml version="1.0"?>
-<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
-    <system>
-    </system>
-</config>
-`
-        const etcAdminhtmlPath = path.join(this.#moduleMeta.realPath, 'etc', 'adminhtml');
-        MagentoCommons.syncRecursionCreateDir(etcAdminhtmlPath);
-        const adminhtmlSystemXml = path.join(etcAdminhtmlPath, 'system.xml');
-        const systemData = await fs.promises.readFile(adminhtmlSystemXml).then(data => data).catch(() => initSystemXml);
-        const systemXmlParseJson = this.#xmlParser.parse(systemData);
-        systemXmlParseJson.config.system.section = item;
-        // let section;
-        // if (systemXmlParseJson.config.system === '') {
-        //     if (Array.isArray(systemXmlParseJson.config.system.section)) {
-        //         section = Array.from(systemXmlParseJson.config.system.section);
-        //     } else {
-        //         section = Array.of(systemXmlParseJson.config.system.section);
-        //     }
-        // } else {
-        //     console.log(systemXmlParseJson.config.system)
-        // }
-        console.log(systemXmlParseJson.config.system.section);
-        console.log(this.#xmlBuilder.build(systemXmlParseJson));
-    }
-
     #flushDbSchemaWhitelistJson(tables) {
         const dbSchemaWhitelistJsonContent = {};
-        if (tables && Array.isArray(tables)) {
-            for (let table of tables) {
-                dbSchemaWhitelistJsonContent[table.name] = {};
-                let columns = {};
-                for (let columnDefine of table.column) {
-                    columns[columnDefine.name] = true;
+        for (let table of tables) {
+            dbSchemaWhitelistJsonContent[table['@@name']] = {};
+            let columns = {};
+            for (let columnDefine of table.column) {
+                columns[columnDefine['@@name']] = true;
+            }
+            dbSchemaWhitelistJsonContent[table['@@name']]['column'] = columns;
+            if ('constraint' in table) {
+                let constraintDefines = [];
+                if (Array.isArray(table.constraint)) {
+                    constraintDefines.push(...table.constraint);
+                } else {
+                    constraintDefines.push(table.constraint);
                 }
-                dbSchemaWhitelistJsonContent[table.name]['column'] = columns;
-                if ('constraint' in table) {
-                    let constraintDefines = [];
-                    if (Array.isArray(table.constraint)) {
-                        constraintDefines.push(...table.constraint);
-                    } else {
-                        constraintDefines.push(table.constraint);
-                    }
-                    let constraints = {};
-                    for (let constraintDefine of constraintDefines) {
-                        constraints[constraintDefine["@@referenceId"]] = true;
-                    }
-                    dbSchemaWhitelistJsonContent[table.name]['constraint'] = constraints;
+                let constraints = {};
+                for (let constraintDefine of constraintDefines) {
+                    constraints[constraintDefine["@@referenceId"]] = true;
                 }
-                if ('index' in table) {
-                    let indexDefines = [];
-                    if (Array.isArray(table.index)) {
-                        indexDefines.push(...table.index);
-                    } else {
-                        indexDefines.push(table.index);
-                    }
-                    let indexes = {};
-                    for (let indexDefine of indexDefines) {
-                        indexes[indexDefine["@@referenceId"]] = true;
-                    }
-                    dbSchemaWhitelistJsonContent[table.name]['index'] = indexes;
+                dbSchemaWhitelistJsonContent[table['@@name']]['constraint'] = constraints;
+            }
+            if ('index' in table) {
+                let indexDefines = [];
+                if (Array.isArray(table.index)) {
+                    indexDefines.push(...table.index);
+                } else {
+                    indexDefines.push(table.index);
                 }
+                let indexes = {};
+                for (let indexDefine of indexDefines) {
+                    indexes[indexDefine["@@referenceId"]] = true;
+                }
+                dbSchemaWhitelistJsonContent[table['@@name']]['index'] = indexes;
             }
         }
         const dbSchemaWhitelistJson = path.join(this.#moduleMeta.realPath, 'etc', 'db_schema_whitelist.json');

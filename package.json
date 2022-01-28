@@ -4,7 +4,6 @@
   "description": "generate_magento2 template code, like Model, ResourceModel, Collection, Repository",
   "main": "index.js",
   "scripts": {
-    "build": "node build.js",
     "test": "node test.js",
     "temp": "node temp.js"
   },
@@ -15,6 +14,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "fast-xml-parser": "^4.0.1"
+    "fast-xml-parser": "^4.0.1",
+    "tar": "^6.1.11"
   }
 }

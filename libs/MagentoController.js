@@ -37,6 +37,7 @@ class MagentoController {
 
     get #abstractBaseController() {
         return `<?php
+        
 use ${this.#controllerNamespace};
 
 use Magento\\Backend\\App\\Action;
@@ -49,7 +50,7 @@ abstract class Base extends Action
     
     protected $title;
     
-    public const ADMIN_RESOURCE = '${this.#moduleMeta.name}::${this.#backendUrl.controller}'
+    public const ADMIN_RESOURCE = '${this.#moduleMeta.name}::${this.#backendUrl.controller}';
     
     public function __construct(Context $context, PageFactory $pageFactory)
     {

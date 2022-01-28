@@ -186,11 +186,11 @@ class MagentoCommons {
             column: tableJson.table['column'],
             primaryKey: tablePrimaryKeyColumn
         };
-        if ('constraint' in tableJson) {
-            tableMeta.constraint = tableJson.constraint;
+        if ('constraint' in tableJson.table) {
+            tableMeta.constraint = tableJson.table.constraint;
         }
-        if ('index' in tableJson) {
-            tableMeta.index = tableJson.index;
+        if ('index' in tableJson.table) {
+            tableMeta.index = tableJson.table.index;
         }
         return tableMeta;
     }

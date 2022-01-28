@@ -15,5 +15,3 @@ fs.readdir(testPath, (err, files) => {
         })
     }
 })
-
-
