@@ -15,14 +15,3 @@ fs.readdir(testPath, (err, files) => {
         })
     }
 })
-
-// function recursionDelDir(dir) {
-//     fs.readdir(dir, (err, files) => {
-//         if (err) {
-//             return;
-//         }
-//         files.forEach(file => {
-//
-//         })
-//     })
-// }

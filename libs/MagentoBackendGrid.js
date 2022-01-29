@@ -4,8 +4,8 @@ const MagentoBackendController = require('./MagentoController');
 const MagentoModel = require('./MagentoModel');
 const MagentoView = require('./MagentoView');
 const MagentoModule = require('./MagentoModule');
-const path = require('path');
-const tar = require('tar');
+const path = require("path");
+const tar = require("tar");
 
 class MagentoBackendGrid {
 
@@ -28,11 +28,15 @@ class MagentoBackendGrid {
         this.#modelMeta = MagentoCommons.magentoModelMeta(this.#tableMeta.name, this.#moduleMeta);
     }
 
-    generateModuleGridZipFile() {
-        this.#generateModuleGridFiles().then( () => {
+    async generateModuleGridZipFile() {
+        return await this.#generateModuleGridFiles().then(() => {
             const outputFile = `${this.#gridUrlMeta.route}_${this.#gridUrlMeta.controller}_grid.tgz`;
-            tar.c({gzip: true, file: outputFile,}, [this.#moduleMeta.realPath]).then(() => MagentoCommons.recursionDelDir(this.#moduleMeta.realPath))
-        }).catch(err => {throw err;});
+            tar.c({gzip: true, file: outputFile,}, [this.#moduleMeta.moduleName])
+                .then(() => MagentoCommons.syncRecursionDelDir(this.#moduleMeta.moduleName));
+            return outputFile;
+        }).catch(err => {
+            throw err;
+        });
     }
 
     async #generateModuleGridFiles() {

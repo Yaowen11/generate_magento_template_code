@@ -34,7 +34,7 @@ class MagentoCommons {
         return {
             name: moduleName,
             namespace: `${magentoModuleName}\\${packageName}`,
-            realPath: path.join(rootPath, 'app', 'code', magentoModuleName, packageName),
+            realPath: path.join(rootPath, magentoModuleName, packageName),
             moduleName: magentoModuleName,
             packageName: packageName,
         }
@@ -220,8 +220,12 @@ class MagentoCommons {
 
     }
 
-    static recursionDelDir(dir) {
+    static syncRecursionDelDir(dir) {
+        fs.rmSync(dir, {recursive: true, force: true});
+    }
 
+    static rootPath() {
+        return path.parse(__dirname).dir;
     }
 }
 

@@ -12,25 +12,15 @@ class MagentoModule {
 
     initMagentoModule() {
         if (!this.#moduleExists()) {
-            const appPointAt = this.#moduleMeta.realPath.search('app');
-            const basePath = this.#moduleMeta.realPath.slice(0, appPointAt);
-            fs.stat(basePath, ((err, stats) => {
-                if (stats.isDirectory()) {
-                    const packagePath = path.join(basePath, 'app', 'code', this.#moduleMeta.moduleName, this.#moduleMeta.packageName);
-                    Commons.syncRecursionCreateDir(packagePath);
-                    // init module composer json
-                    Commons.asyncWriteFile(path.join(this.#moduleMeta.realPath, 'composer.json'), JSON.stringify(this.#composerJson, null, 4));
-                    // init registration php
-                    Commons.asyncWriteFile(path.join(this.#moduleMeta.realPath, 'registration.php'), this.#registration);
-                    // init module xml
-                    const etcPath = path.join(this.#moduleMeta.realPath, 'etc');
-                    Commons.syncRecursionCreateDir(etcPath);
-                    const moduleXml = path.join(etcPath, 'module.xml')
-                    Commons.asyncWriteFile(moduleXml, this.#moduleXml);
-                } else {
-                    throw new Error('magento project dir not exists!')
-                }
-            }))
+            Commons.syncRecursionCreateDir(this.#moduleMeta.realPath);
+            Commons.asyncWriteFile(path.join(this.#moduleMeta.realPath, 'composer.json'), JSON.stringify(this.#composerJson, null, 4));
+            // init registration php
+            Commons.asyncWriteFile(path.join(this.#moduleMeta.realPath, 'registration.php'), this.#registration);
+            // init module xml
+            const etcPath = path.join(this.#moduleMeta.realPath, 'etc');
+            Commons.syncRecursionCreateDir(etcPath);
+            const moduleXml = path.join(etcPath, 'module.xml')
+            Commons.asyncWriteFile(moduleXml, this.#moduleXml);
         }
     }
 

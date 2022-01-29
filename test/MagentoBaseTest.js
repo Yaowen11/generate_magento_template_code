@@ -42,35 +42,21 @@ class MagentoBaseTest {
     </table>`
     }
 
-    generateModuleGridZipFileTest() {
+    async generateModuleGridZipFileTest() {
         const grid = new BackendGrid(this.#moduleMeta, this.#gridUrlMeta, this.#tableDefine);
-        const file = `${this.#gridUrlMeta.route}_${this.#gridUrlMeta.controller}_grid.tgz`;
-        this.packagePromise(grid, grid.generateModuleGridZipFile)
-            .then(() => {
-                fs.promises.stat(file).then(stat => {
-                    if (stat.isFile() && stat.size > 0) {
-                        console.log('MagentoBackendGrid.generateModuleGridZipFile test successful');
-                        // fs.unlink(file, err => {throw err;});
-                    }
-                })
-            })
-            .catch((err) => {
-                console.log('MagentoBackendGrid.generateModuleGridZipFile test failed ' + err)
-            })
-    }
-
-    packagePromise(obj, callback, ...args) {
-        return new Promise(function (resolve, reject) {
-            try {
-                Reflect.apply(callback, obj, args);
-                resolve()
-            } catch (err) {
-                reject(err)
+        await grid.generateModuleGridZipFile();
+        const gzFile = await grid.generateModuleGridZipFile();
+        fs.promises.stat(gzFile).then(stat => {
+            if (stat.isFile()) {
+                console.log('MagentoBackendGrid.generateModuleGridZipFile test successful!');
             }
-        });
+        }).catch(err => {
+            console.log('MagentoBackendGrid.generateModuleGridZipFile test failed! ' + err);
+        })
     }
 }
 
 const magentoBaseTest = new MagentoBaseTest();
 
 magentoBaseTest.generateModuleGridZipFileTest();
+
