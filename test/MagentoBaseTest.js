@@ -7,7 +7,7 @@ const Commons = require(path.join(__dirname, 'libs', 'MagentoCommons.js'));
 const ConfigXml = require(path.join(__dirname, 'libs', 'MagentoConfigXml.js'));
 const Model = require(path.join(__dirname, 'libs', 'MagentoModel.js'));
 const MagentoModule = require(path.join(__dirname, 'libs', 'MagentoModule.js'));
-const TableGraphql = require(path.join(__dirname, 'libs', 'MagentoTableGraphql.js'));
+const FrontTableQuery = require(path.join(__dirname, 'libs', 'MagentoFrontTableQuery.js'));
 const View = require(path.join(__dirname, 'libs', 'MagentoView.js'));
 
 class MagentoBaseTest {
@@ -54,9 +54,14 @@ class MagentoBaseTest {
             console.log('MagentoBackendGrid.generateModuleGridZipFile test failed! ' + err);
         })
     }
+
+    async generateMagentoFrontTableQueryTest() {
+        const frontTableQuery = new FrontTableQuery(this.#moduleMeta, this.#tableDefine);
+        frontTableQuery.buildFrontTableQuery();
+    }
 }
 
 const magentoBaseTest = new MagentoBaseTest();
 
-magentoBaseTest.generateModuleGridZipFileTest();
-
+// magentoBaseTest.generateModuleGridZipFileTest();
+magentoBaseTest.generateMagentoFrontTableQueryTest();
