@@ -56,7 +56,8 @@ class MagentoBaseTest {
     }
 
     async generateMagentoFrontTableQueryTest() {
-        const frontTableQuery = new FrontTableQuery(this.#moduleMeta, this.#tableDefine);
+        const tableMeta = Commons.magentoTableMetaByTableXml(this.#tableDefine);
+        const frontTableQuery = new FrontTableQuery(this.#moduleMeta, tableMeta, this.#gridUrlMeta);
         frontTableQuery.buildFrontTableQuery();
     }
 }
@@ -64,4 +65,4 @@ class MagentoBaseTest {
 const magentoBaseTest = new MagentoBaseTest();
 
 // magentoBaseTest.generateModuleGridZipFileTest();
-magentoBaseTest.generateMagentoFrontTableQueryTest();
+magentoBaseTest.generateMagentoFrontTableQueryTest().catch(err => {throw err;});
