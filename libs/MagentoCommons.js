@@ -201,7 +201,7 @@ class MagentoCommons {
         let rootPath;
         if (dirParse.root !== '') {
             rootPath = dirParse.root;
-            dirs = dirParse.dir.substr(rootPath.length).split(path.sep);
+            dirs = dirParse.dir.substring(rootPath.length).split(path.sep);
         } else {
             rootPath = __dirname;
             dirs = dirParse.dir.split(path.sep);

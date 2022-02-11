@@ -4,7 +4,7 @@ const MagentoBackendController = require('./MagentoController');
 const MagentoModel = require('./MagentoModel');
 const MagentoView = require('./MagentoView');
 const MagentoModule = require('./MagentoModule');
-const path = require("path");
+const MagentoFrontTableQuery = require('./MagentoFrontTableQuery');
 const tar = require("tar");
 
 class MagentoBackendGrid {
@@ -56,6 +56,8 @@ class MagentoBackendGrid {
         await magentoView.buildBackendView();
         const magentoConfigXml = new MagentoConfigXml(this.#moduleMeta);
         await magentoConfigXml.buildAdminGridXml(this.#gridUrlMeta, this.#tableMeta, imageColumn);
+        const magentoFrontTableQuery = new MagentoFrontTableQuery(this.#moduleMeta, this.#tableMeta, this.#gridUrlMeta);
+        await magentoFrontTableQuery.buildFrontTableQuery();
     }
 }
 

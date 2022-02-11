@@ -1,6 +1,5 @@
 const path = require("path");
 const MagentoCommons = require("./MagentoCommons");
-const fs = require("fs");
 const os = require("os");
 
 class MagentoFrontTableQuery {
@@ -19,16 +18,12 @@ class MagentoFrontTableQuery {
 
     buildFrontTableQuery() {
         this.#buildGraphql();
-        this.#buildWebApi();
+        this.#schemaGraphqlResolver();
     }
 
     #buildGraphql() {
         this.#schemaGraphql();
-
-    }
-
-    #buildWebApi() {
-
+        this.#schemaGraphqlResolver();
     }
 
     #schemaGraphql() {
@@ -37,18 +32,18 @@ class MagentoFrontTableQuery {
         const schemaGraphqlFile = path.join(etcDir, 'schema.graphqls');
         let schemaGraphqlContent = `
 type Query {
-    ${this.#gridUrlMeta.route}${this.#gridUrlMeta.controller.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s(
+    ${this.#gridUrlMeta.route}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s(
         pageSize: Int = 20 @doc(description: "Specifies the maximum number of results to return at once."),
         currentPage: Int = 1 @doc(description: "Specifies which page of results to return."),
-    ): ${this.#gridUrlMeta.route.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s @doc(description: "The list of ${this.#gridUrlMeta.controller}s.") @resolver(class: "${this.#moduleMeta.namespace}\\Model\\Resolver\\${this.#gridUrlMeta.controller.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s")
+    ): ${this.#gridUrlMeta.route.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s @doc(description: "The list of ${this.#gridUrlMeta.controller}s.") @resolver(class: "${this.#moduleMeta.namespace}\\Model\\Resolver\\${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s")
 }
 
-type ${this.#gridUrlMeta.route.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s {
-    items: [${this.#gridUrlMeta.route.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}] @doc(description: "An array of ${this.#gridUrlMeta.controller}s.")
+type ${this.#gridUrlMeta.route.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s {
+    items: [${this.#gridUrlMeta.route.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}] @doc(description: "An array of ${this.#gridUrlMeta.controller}s.")
     page_info: SearchResultPageInfo @doc(description: "Metadata for pagination rendering.")
 }
 
-type ${this.#gridUrlMeta.route.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)} @doc(description: "Details of a ${this.#gridUrlMeta.controller}.") {`;
+type ${this.#gridUrlMeta.route.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)} @doc(description: "Details of a ${this.#gridUrlMeta.controller}.") {`;
         for (let column of this.#tableMeta.column) {
             let columnType = 'String';
             if (column['@@xsi:type'].includes("char") || column['@@xsi:type'].includes("text")) {
@@ -79,21 +74,61 @@ use Magento\\Framework\\Graphql\\Query\\ResolverInterface;
 use Magento\\Framework\\GraphQl\\Config\\Element\\Field;
 use Magento\\Framework\\GraphQl\\Query\\Resolver\\ContextInterface;
 use Magento\\Framework\\GraphQl\\Schema\\Type\\ResolveInfo;
+use Magento\\Framework\\GraphQl\\Exception\\GraphQlInputException;
 
-class ${this.#gridUrlMeta.controller.substr(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)} implements ResolverInterface;     
+class ${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)} implements ResolverInterface
 {
     private $repository;
     
-    public function __construct(${MagentoCommons.underscore2hump(this.#tableMeta.name)}
-    }`
+    public function __construct(${MagentoCommons.underscore2hump(this.#tableMeta.name)}Repository $repository)
+    {
+        $this->repository = $repository;
     }
+    
+    public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
+    {
+        if ($args['currentPage'] < 1) {
+            throw new GraphQlInputException(__('currentPage value must be greater than 0.'));
+        }
 
-
-    get #webApi() {
-
+        if ($args['pageSize'] < 1) {
+            throw new GraphQlInputException(__('pageSize value must be greater than 0.'));
+        }
+        
+        $collection = $this->repository->buildCollection()
+            ->setPageSize($args['pageSize'])
+            ->setCurPage($args['currentPage']);
+        $collectionSize = $collection->getSize();
+        if ($collectionSize) {
+            $maxPages = ceil($collectionSize / $args['pageSize']);
+        } else {
+            $maxPages = 0;
+        }
+        $items = [];
+        foreach ($collection as $item) {`
+        for (let column of this.#tableMeta.column) {
+            resolverContent += os.EOL + `            $items[]['${column['@@name']}'] = $item->getData('${column['@@name']}');`
+        }
+        
+        resolverContent +=
+        `
+        }
+        
+        return [
+            'total_count' => $collection->getSize(),
+            'items' => $items,
+            'page_info' => [
+                'page_size' => $collectionSize,
+                'current_page' => $args['currentPage'],
+                'total_pages' => $maxPages
+            ]
+        ];
     }
-
-
+    
+}`
+        const resolveFile = path.join(resolverDir, `${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}.php`);
+        MagentoCommons.asyncWriteFile(resolveFile, resolverContent);
+    }
 
 }
 

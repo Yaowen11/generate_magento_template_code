@@ -30,7 +30,7 @@ class MagentoConfigXml {
         };
         const controllerMenuItem = {
             '@@id': `${this.#moduleMeta.name}::${gridUrlMeta.controller}`,
-            '@@title': `${this.#moduleMeta.name.replace('_', ' ')} ${gridUrlMeta.controller.substr(0, 1).toUpperCase()}${gridUrlMeta.controller.slice(1)}`,
+            '@@title': `${this.#moduleMeta.name.replace('_', ' ')} ${gridUrlMeta.controller.substring(0, 1).toUpperCase()}${gridUrlMeta.controller.slice(1)}`,
             '@@translate': 'title',
             '@@module': this.#moduleMeta.name,
             '@@parent': menuModuleManItem["@@id"],
@@ -61,7 +61,7 @@ class MagentoConfigXml {
         };
         this.#buildAclXml(gridResourceAcl);
 
-        const collectionName = `${gridUrlMeta.route.substr(0, 1).toUpperCase()}${gridUrlMeta.route.slice(1)}`
+        const collectionName = `${gridUrlMeta.route.substring(0, 1).toUpperCase()}${gridUrlMeta.route.slice(1)}`
         const collectionFactoryType = {
             type: "type",
             content: {
@@ -94,7 +94,7 @@ class MagentoConfigXml {
                         {
                             '@@name': 'resourceModel',
                             '@@xsi:type': 'string',
-                            '#text': `${this.#moduleMeta.namespace}\\Model\\ResourceModel\\${gridUrlMeta.route.substr(0, 1).toUpperCase()}${gridUrlMeta.route.slice(1)}\\${gridUrlMeta.controller.substr(0, 1).toUpperCase()}${gridUrlMeta.controller.slice(1)}`
+                            '#text': `${this.#moduleMeta.namespace}\\Model\\ResourceModel\\${gridUrlMeta.route.substring(0, 1).toUpperCase()}${gridUrlMeta.route.slice(1)}\\${gridUrlMeta.controller.substring(0, 1).toUpperCase()}${gridUrlMeta.controller.slice(1)}`
                         }
                     ]
                 }
@@ -146,7 +146,7 @@ class MagentoConfigXml {
             const imageUploadType = {
                 type: 'type',
                 content: {
-                    '@@name': `${this.#moduleMeta.namespace}\\Controller\\Adminhtml\\${gridUrlMeta.controller.substr(0, 1)}${gridUrlMeta.controller.slice(1)}\\Upload`,
+                    '@@name': `${this.#moduleMeta.namespace}\\Controller\\Adminhtml\\${gridUrlMeta.controller.substring(0, 1)}${gridUrlMeta.controller.slice(1)}\\Upload`,
                     'arguments': {
                         'argument': {
                             '@@name': 'imageUploader',

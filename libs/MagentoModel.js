@@ -213,10 +213,15 @@ class ${this.#modelMeta.repositoryName}
         }
     }
     
-    public function get(\$${this.#tableMeta.primaryKey}): ${this.#modelMeta.name}
+    public function getById(\$${this.#tableMeta.primaryKey}): ${this.#modelMeta.name}
+    {
+        return $this->get(\$${this.#tableMeta.primaryKey}, '${this.#tableMeta.primaryKey}');
+    }
+    
+    public function get(string $field, $value): ${this.#modelMeta.name}
     {
         ${this.#modelMeta.variable} = $this->build();
-        $this->resource${this.#modelMeta.resourceName}->load(${this.#modelMeta.variable}, \$${this.#tableMeta.primaryKey}, '${this.#tableMeta.primaryKey}');
+        $this->resource${this.#modelMeta.resourceName}->load(${this.#modelMeta.variable}, $value, $field);
         return ${this.#modelMeta.variable};
     }
     
