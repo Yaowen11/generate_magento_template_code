@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "node test.js",
-    "temp": "node temp.js"
+    "start": "node index.js",
+    "dev": "nodemon index.js"
   },
   "keywords": [
     "magento2",
@@ -14,6 +15,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "express": "^4.17.2",
+    "express-handlebars": "^6.0.2",
     "fast-xml-parser": "^4.0.1",
     "tar": "^6.1.11"
   }
