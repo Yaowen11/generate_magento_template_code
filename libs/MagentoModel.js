@@ -157,9 +157,9 @@ namespace ${this.#modelMeta.namespace};
 use Exception;
 use Magento\\Framework\\Exception\\CouldNotSaveException;
 use Magento\\Framework\\Exception\\CouldNotDeleteException;
-${this.#modelMeta.useName}Factory;
 ${this.#modelMeta.resourceUseName};
 ${this.#modelMeta.collectionUseName};
+${this.#modelMeta.collectionUseName}Factory;
 use Psr\\Log\\LoggerInterface;
 
 class ${this.#modelMeta.repositoryName}
@@ -215,7 +215,7 @@ class ${this.#modelMeta.repositoryName}
     
     public function getById(\$${this.#tableMeta.primaryKey}): ${this.#modelMeta.name}
     {
-        return $this->get(\$${this.#tableMeta.primaryKey}, '${this.#tableMeta.primaryKey}');
+        return $this->get('${this.#tableMeta.primaryKey}', \$${this.#tableMeta.primaryKey});
     }
     
     public function get(string $field, $value): ${this.#modelMeta.name}

@@ -30,12 +30,14 @@ class MagentoFrontTableQuery {
         const etcDir = path.join(this.#moduleMeta.realPath, 'etc');
         MagentoCommons.syncRecursionCreateDir(etcDir);
         const schemaGraphqlFile = path.join(etcDir, 'schema.graphqls');
+        const returnType = `${this.#gridUrlMeta.route.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s`;
         let schemaGraphqlContent = `
+
 type Query {
-    ${this.#gridUrlMeta.route}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s(
-        pageSize: Int = 20 @doc(description: "Specifies the maximum number of results to return at once."),
-        currentPage: Int = 1 @doc(description: "Specifies which page of results to return."),
-    ): ${this.#gridUrlMeta.route.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s @doc(description: "The list of ${this.#gridUrlMeta.controller}s.") @resolver(class: "${this.#moduleMeta.namespace}\\Model\\Resolver\\${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s")
+    ${this.#gridUrlMeta.route}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s (
+        pageSize: Int = 20
+        currentPage: Int = 1
+    ): ${returnType} @resolver(class: "${this.#moduleMeta.moduleName}\\\\${this.#moduleMeta.packageName}\\\\Model\\\\Resolver\\\\${returnType}") @doc(description: "The list of ${this.#gridUrlMeta.route} ${this.#gridUrlMeta.controller}s.")
 }
 
 type ${this.#gridUrlMeta.route.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s {
@@ -63,20 +65,21 @@ type ${this.#gridUrlMeta.route.substring(0, 1).toUpperCase()}${this.#gridUrlMeta
     }
 
     #schemaGraphqlResolver() {
-        const resolverDir = path.join(this.#moduleMeta.realPath, 'Model', 'resolver');
+        const resolverDir = path.join(this.#moduleMeta.realPath, 'Model', 'Resolver');
+        const fileName = `${this.#gridUrlMeta.route.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.route.slice(1)}${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}s`;
         MagentoCommons.syncRecursionCreateDir(resolverDir);
         let resolverContent = `<?php
 
 namespace ${this.#moduleMeta.namespace}\\Model\\Resolver;
 
 use ${this.#moduleMeta.namespace}\\Model\\${MagentoCommons.underscore2hump(this.#tableMeta.name)}Repository;
-use Magento\\Framework\\Graphql\\Query\\ResolverInterface;
+use Magento\\Framework\\GraphQl\\Query\\ResolverInterface;
 use Magento\\Framework\\GraphQl\\Config\\Element\\Field;
 use Magento\\Framework\\GraphQl\\Query\\Resolver\\ContextInterface;
 use Magento\\Framework\\GraphQl\\Schema\\Type\\ResolveInfo;
 use Magento\\Framework\\GraphQl\\Exception\\GraphQlInputException;
 
-class ${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)} implements ResolverInterface
+class ${fileName} implements ResolverInterface
 {
     private $repository;
     
@@ -135,7 +138,7 @@ class ${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridU
     }
     
 }`
-        const resolveFile = path.join(resolverDir, `${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridUrlMeta.controller.slice(1)}.php`);
+        const resolveFile = path.join(resolverDir, `${fileName}.php`);
         MagentoCommons.asyncWriteFile(resolveFile, resolverContent);
     }
 

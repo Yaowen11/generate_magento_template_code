@@ -42,6 +42,15 @@ class MagentoView {
                 MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(uiComponentListingColumnDir, columnClassContent.file), columnClassContent.content);
             }
         }
+        const actionsFile = `${this.#backendUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#backendUrlMeta.controller.slice(1)}Actions`;
+        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(uiComponentListingColumnDir, `${actionsFile}.php`), this.#columnActions)
+
+        const uiDataProviderClassDir = path.join(path.join(this.#moduleMeta.realPath, 'Ui', 'Component', 'DataProvider'));
+        MagentoCommons.syncRecursionCreateDir(uiDataProviderClassDir);
+        MagentoCommons.ifFileNotExistsAsyncWriteFile(
+            path.join(uiDataProviderClassDir, `${this.#backendUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#backendUrlMeta.controller.slice(1)}DataProvider.php`),
+            this.#uiDataProvider
+        )
     }
 
     #componentColumnClassContent(columnDefine) {
@@ -196,7 +205,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                                         "@@xsi:type": "string"
                                     },
                                     {
-                                        "#text": "rantion/banner/new",
+                                        "#text": `${this.#backendUrlMeta.route}/${this.#backendUrlMeta.controller}/new`,
                                         "@@name": "url",
                                         "@@xsi:type": "string"
                                     }
@@ -218,7 +227,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                         {
                             "argument": [
                                 {
-                                    "#text": `${this.#moduleMeta.namespace}\\Ui\\Component\\DataProvider\\${this.#backendUrlMeta.controller}DataProvider`,
+                                    "#text": `${this.#moduleMeta.namespace}\\Ui\\Component\\DataProvider\\${this.#backendUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#backendUrlMeta.controller.slice(1)}DataProvider`,
                                     "@@name": "class",
                                     "@@xsi:type": "string"
                                 },
@@ -361,6 +370,22 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                 }
             };
         }
+        if (columnDefine['@@name'].includes("image")) {
+            return {
+                "@@name": columnDefine['@@name'],
+                "settings": {
+                    "hasPreview": 1,
+                    "label": {
+                        "#text": translateName,
+                        "@@translate": "true"
+                    },
+                    "sortable": false
+                },
+                "@@component": "Magento_Ui/js/grid/columns/thumbnail",
+                "@@class": `${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${translateName}Thumbnail`
+            }
+
+        }
         if (columnDefine['@@xsi:type'].includes('tinyint') && columnDefine['@@comment'].includes('0:')) {
             const optionsClass = `${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${translateName}`
             return {
@@ -427,22 +452,6 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     }
                 }
             }
-        }
-        if (columnDefine['@@name'].includes("image")) {
-            return {
-                "@@name": columnDefine['@@name'],
-                "settings": {
-                    "hasPreview": 1,
-                    "label": {
-                        "#text": translateName,
-                        "@@translate": "true"
-                    },
-                    "sortable": false
-                },
-                "@@component": "Magento_Ui/js/grid/columns/thumbnail",
-                "@@class": `${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${translateName}Thumbnail`
-            }
-
         }
         return {};
     }
@@ -555,6 +564,71 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
         return uiComponentFormJson;
     }
 
+    get #uiDataProvider() {
+        return `<?php
+
+namespace ${this.#moduleMeta.namespace}\\Ui\\Component\\DataProvider;
+
+use Magento\\Framework\\View\\Element\\UiComponent\\DataProvider\\DataProvider;
+
+class ${this.#backendUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#backendUrlMeta.controller.slice(1)}DataProvider extends DataProvider
+{
+
+}`
+    }
+
+    get #columnActions() {
+        return `<?php
+
+namespace ${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column;
+
+use Magento\\Framework\\UrlInterface;
+use Magento\\Framework\\View\\Element\\UiComponent\\ContextInterface;
+use Magento\\Framework\\View\\Element\\UiComponentFactory;
+use Magento\\Ui\\Component\\Listing\\Columns\\Column;
+
+class ${this.#backendUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#backendUrlMeta.controller.slice(1)}Actions extends Column
+{
+    private $urlBuilder;
+    
+    public function __construct(ContextInterface $context,
+                                UrlInterface $urlBuilder,
+                                UiComponentFactory $uiComponentFactory,
+                                array $components = [],
+                                array $data = [])
+    {
+        parent::__construct($context, $uiComponentFactory, $components, $data);
+        $this->urlBuilder = $urlBuilder;
+    }
+    
+    public function prepareDataSource(array $dataSource): array
+    {
+        if (isset($dataSource['data']['items'])) {
+            foreach ($dataSource['data']['items'] as &$item) {
+                if (isset($item['${this.#tableMeta.primaryKey}'])) {
+                    $item[$this->getData('name')] = [
+                        'edit' => [
+                            'href' => $this->urlBuilder->getUrl('${this.#backendUrlMeta.route}/${this.#backendUrlMeta.controller}/edit', ['id' => $item['id']]),
+                            'label' => __('Edit'),
+                        ],
+                        'delete' => [
+                            'href' => $this->urlBuilder->getUrl('${this.#backendUrlMeta.route}/${this.#backendUrlMeta.controller}/delete', ['id' => $item['id']]),
+                            'label' => __('Delete'),
+                            'confirm' => [
+                                'title' => __('Delete'),
+                                'message' => __('Are you sure?')
+                            ]
+                        ]
+                    ];
+                }
+            }
+        }
+        return $dataSource;
+    }
+        
+}`;
+    }
+
     #buildFormColumn(columnDefine) {
         if (columnDefine['@@name'] === this.#tableMeta.primaryKey) {
             return {
@@ -586,8 +660,43 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                 "@@formElement": "hidden"
             }
         }
-        if (columnDefine['@@xsi:type'].includes("char")) {
+        if (columnDefine['@@name'].includes('image')) {
             return {
+                "settings": {
+                    "label": {
+                        "#text": `${MagentoCommons.underscore2hump(columnDefine['@@name'])}`,
+                        "@@translate": "true"
+                    },
+                    "componentType": "imageUploader",
+                    "validation": {
+                        "rule": {
+                            "#text": true,
+                            "@@name": "required-entry",
+                            "@@xsi:type": "boolean"
+                        }
+                    }
+                },
+                "formElements": {
+                    "imageUploader": {
+                        "settings": {
+                            "allowedExtensions": "jpg jpeg gif png",
+                            "maxFileSize": 5242880,
+                            "uploaderConfig": {
+                                "param": {
+                                    "#text": `${this.#backendUrlMeta.url}/upload`,
+                                    "@@xsi:type": "string",
+                                    "@@name": "url"
+                                }
+                            }
+                        }
+                    }
+                },
+                "@@name": columnDefine['@@name'],
+                "@@formElement": "imageUploader"
+            }
+        }
+        if (columnDefine['@@xsi:type'].includes("char") || columnDefine['@@xsi:type'] === 'int' || columnDefine['@@xsi:type'] === 'double') {
+            const baseColumn = {
                 "@@name": columnDefine['@@name'],
                 "@@formElement": 'input',
                 "argument": {
@@ -623,7 +732,36 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     "visible": true,
                     "dataScope": columnDefine['@@name']
                 }
+            };
+            if (columnDefine['@@xsi:type'] === 'int') {
+                baseColumn['settings']['validation']['rule'] = [
+                    {
+                        "#text": true,
+                        "@@name": "required-entry",
+                        "@@xsi:type": "boolean"
+                    },
+                    {
+                        "#text": true,
+                        "@@name": "integer",
+                        "@@xsi:type": "boolean"
+                    }
+                ];
             }
+            if (columnDefine['@@xsi:type'] === 'double') {
+                baseColumn['settings']['validation']['rule'] = [
+                    {
+                        "#text": true,
+                        "@@name": "required-entry",
+                        "@@xsi:type": "boolean"
+                    },
+                    {
+                        "#text": true,
+                        "@@name": "number",
+                        "@@xsi:type": "boolean"
+                    }
+                ];
+            }
+            return baseColumn;
         }
         if (columnDefine['@@xsi:type'].includes("tinyint") && columnDefine['@@comment'].includes('0:')) {
             return {
@@ -816,41 +954,6 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     "visible": true,
                     "dataScope": columnDefine['@@name']
                 }
-            }
-        }
-        if (columnDefine['@@name'].includes('image')) {
-            return {
-                "settings": {
-                    "label": {
-                        "#text": `${MagentoCommons.underscore2hump(columnDefine['@@name'])}`,
-                        "@@translate": "true"
-                    },
-                    "componentType": "imageUploader",
-                    "validation": {
-                        "rule": {
-                            "#text": true,
-                            "@@name": "required-entry",
-                            "@@xsi:type": "boolean"
-                        }
-                    }
-                },
-                "formElements": {
-                    "imageUploader": {
-                        "settings": {
-                            "allowedExtensions": "jpg jpeg gif png",
-                            "maxFileSize": 5242880,
-                            "uploaderConfig": {
-                                "param": {
-                                    "#text": `${this.#backendUrlMeta.url}/upload`,
-                                    "@@xsi:type": "string",
-                                    "@@name": "url"
-                                }
-                            }
-                        }
-                    }
-                },
-                "@@name": columnDefine['@@name'],
-                "@@formElement": "imageUploader"
             }
         }
         return {};

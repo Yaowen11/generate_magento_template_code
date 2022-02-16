@@ -1,5 +1,6 @@
 const path = require('path');
 const MagentoCommons = require('./MagentoCommons');
+const os = require("os");
 
 class MagentoController {
 
@@ -8,14 +9,17 @@ class MagentoController {
     #backendUrl;
     
     #modelMeta;
+
+    #tableMeta;
     
     #controllerNamespace;
     
     #controllerTitle;
     
-    constructor(moduleMeta, modelMeta) {
+    constructor(moduleMeta, modelMeta, tableMeta) {
         this.#moduleMeta = moduleMeta;
         this.#modelMeta = modelMeta;
+        this.#tableMeta = tableMeta;
     }
 
     buildBackendController(backendUrlMeta, imageColumn) {
@@ -102,7 +106,7 @@ class Edit extends Base
     }
 
     get #saveController() {
-        return `<?php
+        let saveContent = `<?php
 
 namespace ${this.#controllerNamespace};
 
@@ -130,14 +134,22 @@ class Save extends Base
         $params = $this->getRequest()->getParams();
         $redirectPath = '${this.#backendUrl.url}/index';
         try {
-            unset($params['form_key'], $params['key']);
-            if ($params['id']) {
+            unset($params['form_key'], $params['key']);`;
+        for (let columnDefine of this.#tableMeta.column) {
+            if (columnDefine['@@name'].includes('image')) {
+                saveContent += os.EOL + `            \$${columnDefine['@@name']} = $params['${columnDefine['@@name']}'][0]['url'] ?? '';
+            $params['${columnDefine['@@name']}'] = \$${columnDefine['@@name']};
+                `;
+            }
+        }
+        saveContent += `
+            if ($params['${this.#tableMeta.primaryKey}']) {
                 $this->update($params);
             } else {
                 $this->create($params);
             }
         } catch (Exception $exception) {
-            $id = $params['id'] ?? '';
+            $id = $params['${this.#tableMeta.primaryKey}'] ?? '';
             if ($id) {
                 $redirectPath = '${this.#backendUrl.route}/${this.#backendUrl.controller}/edit/id/'. $id;
             }
@@ -151,6 +163,7 @@ class Save extends Base
      */
     private function create(array $data): void
     {
+        unset($data['${this.#tableMeta.primaryKey}']);
         ${this.#modelMeta.variable} = $this->${this.#modelMeta.variable.slice(1)}Repository->build($data);
         $this->${this.#modelMeta.variable.slice(1)}Repository->save(${this.#modelMeta.variable});
     }
@@ -160,14 +173,15 @@ class Save extends Base
      */
     private function update(array $data): void
     {
-        $id = (int)$data['id'];
-        unset($data['id']);
-        ${this.#modelMeta.variable} = $this->${this.#modelMeta.variable.slice(1)}Repository->get($id);
+        $id = (int)$data['${this.#tableMeta.primaryKey}'];
+        unset($data['${this.#tableMeta.primaryKey}']);
+        ${this.#modelMeta.variable} = $this->${this.#modelMeta.variable.slice(1)}Repository->getById($id);
         ${this.#modelMeta.variable} = $this->${this.#modelMeta.variable.slice(1)}Repository->update(${this.#modelMeta.variable}, $data);
         $this->${this.#modelMeta.variable.slice(1)}Repository->save(${this.#modelMeta.variable});
     }
-};
-`
+}
+`;
+        return saveContent;
     }
 
     get #deleteController() {
@@ -194,10 +208,10 @@ class Delete extends Base
     
     public function execute()
     {
-        $id = $this->getRequest()->getParam('id');
+        $id = $this->getRequest()->getParam('${this.#tableMeta.primaryKey}');
         if ($id) {
             try {
-                ${this.#modelMeta.variable} = $this->${this.#modelMeta.variable.slice(1)}Repository->get((int)$id);
+                ${this.#modelMeta.variable} = $this->${this.#modelMeta.variable.slice(1)}Repository->getById((int)$id);
                 $this->${this.#modelMeta.variable.slice(1)}Repository->delete(${this.#modelMeta.variable});
             } catch (Exception $e) {
                 $this->messageManager->addErrorMessage(__("We can't delete."));

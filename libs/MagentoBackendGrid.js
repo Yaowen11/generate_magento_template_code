@@ -44,7 +44,7 @@ class MagentoBackendGrid {
         await module.initMagentoModule();
         const magentoModel = new MagentoModel(this.#tableMeta, this.#modelMeta);
         await magentoModel.buildModel();
-        const magentoController = new MagentoBackendController(this.#moduleMeta, this.#modelMeta);
+        const magentoController = new MagentoBackendController(this.#moduleMeta, this.#modelMeta, this.#tableMeta);
         let imageColumn = '';
         for (let column of this.#tableMeta.column) {
             if (column['@@name'].includes("image")) {

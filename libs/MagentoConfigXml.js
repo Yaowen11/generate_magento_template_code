@@ -42,7 +42,6 @@ class MagentoConfigXml {
         this.#buildAdminhtmlRoute(gridUrlMeta.route).catch(err => {
             throw err;
         })
-
         const gridResourceAcl = {
             '@@id': "Magento_Backend::admin",
             'resource': {
@@ -60,8 +59,7 @@ class MagentoConfigXml {
             }
         };
         this.#buildAclXml(gridResourceAcl);
-
-        const collectionName = `${gridUrlMeta.route.substring(0, 1).toUpperCase()}${gridUrlMeta.route.slice(1)}`
+        const collectionName = `${gridUrlMeta.route.substring(0, 1).toUpperCase()}${gridUrlMeta.route.slice(1)}${gridUrlMeta.controller.substring(0, 1).toUpperCase()}${gridUrlMeta.controller.slice(1)}Collection`
         const collectionFactoryType = {
             type: "type",
             content: {
@@ -73,7 +71,7 @@ class MagentoConfigXml {
                         'item': {
                             '@@name': `${gridUrlMeta.route}_${gridUrlMeta.controller}_listing_data_source`,
                             '@@xsi:type': 'string',
-                            '#text': `${gridUrlMeta.route}`
+                            '#text': collectionName
                         }
                     }
                 }
@@ -94,7 +92,7 @@ class MagentoConfigXml {
                         {
                             '@@name': 'resourceModel',
                             '@@xsi:type': 'string',
-                            '#text': `${this.#moduleMeta.namespace}\\Model\\ResourceModel\\${gridUrlMeta.route.substring(0, 1).toUpperCase()}${gridUrlMeta.route.slice(1)}\\${gridUrlMeta.controller.substring(0, 1).toUpperCase()}${gridUrlMeta.controller.slice(1)}`
+                            '#text': `${this.#moduleMeta.namespace}\\Model\\ResourceModel\\${gridUrlMeta.route.substring(0, 1).toUpperCase()}${gridUrlMeta.route.slice(1)}${gridUrlMeta.controller.substring(0, 1).toUpperCase()}${gridUrlMeta.controller.slice(1)}`
                         }
                     ]
                 }
@@ -146,7 +144,7 @@ class MagentoConfigXml {
             const imageUploadType = {
                 type: 'type',
                 content: {
-                    '@@name': `${this.#moduleMeta.namespace}\\Controller\\Adminhtml\\${gridUrlMeta.controller.substring(0, 1)}${gridUrlMeta.controller.slice(1)}\\Upload`,
+                    '@@name': `${this.#moduleMeta.namespace}\\Controller\\Adminhtml\\${gridUrlMeta.controller.substring(0, 1).toUpperCase()}${gridUrlMeta.controller.slice(1)}\\Upload`,
                     'arguments': {
                         'argument': {
                             '@@name': 'imageUploader',
