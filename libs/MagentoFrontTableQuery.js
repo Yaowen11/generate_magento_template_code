@@ -85,6 +85,15 @@ class ${this.#gridUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#gridU
         $this->repository = $repository;
     }
     
+    /**
+     * @param Field $field
+     * @param ContextInterface $context
+     * @param ResolveInfo $info
+     * @param array|null $value
+     * @param array|null $args
+     * @return array
+     * @throws GraphQlInputException
+     */
     public function resolve(Field $field, $context, ResolveInfo $info, array $value = null, array $args = null)
     {
         if ($args['currentPage'] < 1) {

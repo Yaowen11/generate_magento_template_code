@@ -20,9 +20,9 @@ class MagentoController {
 
     buildBackendController(backendUrlMeta, imageColumn) {
         this.#backendUrl = backendUrlMeta;
-        this.#controllerNamespace = `${this.#modelMeta.namespace}\\Controller\\Adminhtml\\${backendUrlMeta.controller[0].toUpperCase()}${backendUrlMeta.controller.slice(1)}`;
+        this.#controllerNamespace = `${this.#moduleMeta.namespace}\\Controller\\Adminhtml\\${backendUrlMeta.controller[0].toUpperCase()}${backendUrlMeta.controller.slice(1)}`;
         this.#controllerTitle = `${backendUrlMeta.route[0].toUpperCase()}${backendUrlMeta.route.slice(1)} ${backendUrlMeta.controller[0].toUpperCase()}${backendUrlMeta.controller.slice(1)}`;
-        const adminController = path.join(this.#moduleMeta.realPath, 'Controller', 'adminhtml');
+        const adminController = path.join(this.#moduleMeta.realPath, 'Controller', 'Adminhtml', `${backendUrlMeta.controller[0].toUpperCase()}${backendUrlMeta.controller.slice(1)}`);
         MagentoCommons.syncRecursionCreateDir(adminController);
         MagentoCommons.asyncWriteFile(path.join(adminController, 'Base.php'), this.#abstractBaseController);
         MagentoCommons.asyncWriteFile(path.join(adminController, 'Index.php'), this.#indexController);
@@ -38,7 +38,7 @@ class MagentoController {
     get #abstractBaseController() {
         return `<?php
         
-use ${this.#controllerNamespace};
+namespace ${this.#controllerNamespace};
 
 use Magento\\Backend\\App\\Action;
 use Magento\\Backend\\App\\Action\\Context;
@@ -71,7 +71,7 @@ abstract class Base extends Action
     get #indexController() {
         return `<?php
 
-use ${this.#controllerNamespace};
+namespace ${this.#controllerNamespace};
 
 class Index extends Base
 {
@@ -82,7 +82,7 @@ class Index extends Base
     get #newController() {
         return `<?php
 
-use ${this.#controllerNamespace};
+namespace ${this.#controllerNamespace};
 
 class NewAction extends Base
 {
@@ -93,7 +93,7 @@ class NewAction extends Base
     get #editController() {
         return `<?php
 
-use ${this.#controllerNamespace};
+namespace ${this.#controllerNamespace};
 
 class Edit extends Base
 {
@@ -104,7 +104,7 @@ class Edit extends Base
     get #saveController() {
         return `<?php
 
-use ${this.#controllerNamespace};
+namespace ${this.#controllerNamespace};
 
 use Exception;
 use Magento\\Framework\\Exception\\CouldNotSaveException;
@@ -173,7 +173,7 @@ class Save extends Base
     get #deleteController() {
         return `<?php
 
-use ${this.#controllerNamespace};
+namespace ${this.#controllerNamespace};
 
 use Exception;
 use Magento\\Backend\\App\\Action\\Context;
@@ -213,7 +213,7 @@ class Delete extends Base
 
 namespace ${this.#controllerNamespace};
 
-use Magento\\Backend\\App\\Action\\Content;
+use Magento\\Backend\\App\\Action\\Context;
 use Magento\\Backend\\App\\Action;
 use Magento\\Framework\\App\\Action\\HttpPostActionInterface;
 use Magento\\Framework\\Controller\\ResultFactory;

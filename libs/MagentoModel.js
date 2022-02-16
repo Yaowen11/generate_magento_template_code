@@ -152,7 +152,7 @@ class CollectionFactory
     get #repository() {
         return `<?php
 
-namespace ${this.#modelMeta.resourceNamespace};
+namespace ${this.#modelMeta.namespace};
 
 use Exception;
 use Magento\\Framework\\Exception\\CouldNotSaveException;
@@ -160,7 +160,7 @@ use Magento\\Framework\\Exception\\CouldNotDeleteException;
 ${this.#modelMeta.useName}Factory;
 ${this.#modelMeta.resourceUseName};
 ${this.#modelMeta.collectionUseName};
-${this.#modelMeta.collectionUseName}Factory;
+use Psr\\Log\\LoggerInterface;
 
 class ${this.#modelMeta.repositoryName}
 {
@@ -298,9 +298,9 @@ class DataProvider extends AbstractDataProvider
         $this->loadedData = [];
         $requestId = $this->request->getParam($this->requestFieldName);
         if ($requestId) {
-            $post = $this->repository->get($requestId);
+            $post = $this->repository->getById($requestId);
             if (!$post->getId()) {
-                throw new NoSuchEntityException::singleField('${this.#tableMeta.primaryKey}', $requestId);
+                throw NoSuchEntityException::singleField('${this.#tableMeta.primaryKey}', $requestId);
             }
             $postData = $post->getData();
 `
