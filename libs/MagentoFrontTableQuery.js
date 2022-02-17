@@ -117,13 +117,13 @@ class ${fileName} implements ResolverInterface
             $maxPages = 0;
         }
         $items = [];
-        foreach ($collection as $item) {`
+        foreach ($collection as $item) {
+            $items[] = [
+        `;
         for (let column of this.#tableMeta.column) {
-            resolverContent += os.EOL + `            $items[]['${column['@@name']}'] = $item->getData('${column['@@name']}');`
+            resolverContent += `        '${column['@@name']}' => $item->getData('${column['@@name']}'),` + os.EOL + '        ';
         }
-        
-        resolverContent +=
-        `
+        resolverContent += `   ];
         }
         
         return [
