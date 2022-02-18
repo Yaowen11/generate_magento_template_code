@@ -17,23 +17,19 @@ class MagentoBackendGrid {
 
     #modelMeta;
 
-    constructor(moduleMeta, gridUrlMeta, tableDefine) {
+    constructor(moduleMeta, gridUrlMeta, tableMeta) {
         this.#moduleMeta = moduleMeta
         this.#gridUrlMeta = gridUrlMeta;
-        try {
-            this.#tableMeta = JSON.parse(tableDefine);
-        } catch (err) {
-            this.#tableMeta = MagentoCommons.magentoTableMetaByTableXml(tableDefine)
-        }
+        this.#tableMeta = tableMeta;
         this.#modelMeta = MagentoCommons.magentoModelMeta(this.#tableMeta.name, this.#moduleMeta);
     }
 
     async generateModuleGridZipFile() {
         return await this.#generateModuleGridFiles().then(() => {
             const outputFile = `${this.#gridUrlMeta.route}_${this.#gridUrlMeta.controller}_grid.tgz`;
-            tar.c({gzip: true, file: outputFile,}, [this.#moduleMeta.moduleName])
-                .then(() => MagentoCommons.syncRecursionDelDir(this.#moduleMeta.moduleName));
-            return outputFile;
+            return tar.c({gzip: true, file: outputFile}, [this.#moduleMeta.moduleName])
+                .then(() => MagentoCommons.syncRecursionDelDir(this.#moduleMeta.moduleName))
+                .then(() => {return outputFile;})
         }).catch(err => {
             throw err;
         });

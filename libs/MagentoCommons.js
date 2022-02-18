@@ -77,8 +77,6 @@ class MagentoCommons {
             if (err) {
                 console.log(`async ${fileName} error}`);
                 throw err;
-            } else {
-                console.log(`async write ${fileName} done`);
             }
         })
     }
