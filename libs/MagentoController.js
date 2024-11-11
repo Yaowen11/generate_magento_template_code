@@ -5,17 +5,17 @@ const os = require("os");
 class MagentoController {
 
     #moduleMeta;
-    
+
     #backendUrl;
-    
+
     #modelMeta;
 
     #tableMeta;
-    
+
     #controllerNamespace;
-    
+
     #controllerTitle;
-    
+
     constructor(moduleMeta, modelMeta, tableMeta) {
         this.#moduleMeta = moduleMeta;
         this.#modelMeta = modelMeta;
@@ -50,9 +50,9 @@ use Magento\\Framework\\View\\Result\\PageFactory;
 
 abstract class Base extends Action
 {
-    protected $pageFactory;
+    protected PageFactory $pageFactory;
     
-    protected $title;
+    protected string $title;
     
     public const ADMIN_RESOURCE = '${this.#moduleMeta.name}::${this.#backendUrl.controller}';
     
@@ -79,7 +79,7 @@ namespace ${this.#controllerNamespace};
 
 class Index extends Base
 {
-    protected $title = '${this.#controllerTitle}';
+    protected string $title = '${this.#controllerTitle}';
 }`
     }
 
@@ -90,7 +90,7 @@ namespace ${this.#controllerNamespace};
 
 class NewAction extends Base
 {
-    protected $title = 'Add New ${this.#controllerTitle}';
+    protected string $title = 'Add New ${this.#controllerTitle}';
 }`
     }
 
@@ -101,7 +101,7 @@ namespace ${this.#controllerNamespace};
 
 class Edit extends Base
 {
-    protected $title = 'Edit ${this.#controllerTitle}';
+    protected string $title = 'Edit ${this.#controllerTitle}';
 }`
     }
 
@@ -118,7 +118,7 @@ ${this.#modelMeta.repositoryUseName};
 
 class Save extends Base
 {    
-    private ${this.#modelMeta.repositoryVariable};
+    private ${this.#modelMeta.repositoryName} ${this.#modelMeta.repositoryVariable};
     
     public function __construct(Context $context,
                                 PageFactory $pageFactory,
@@ -196,7 +196,7 @@ ${this.#modelMeta.repositoryUseName};
 
 class Delete extends Base
 {
-    private ${this.#modelMeta.repositoryVariable};
+    private ${this.#modelMeta.repositoryName} ${this.#modelMeta.repositoryVariable};
     
     public function __construct(Context $context,
                                 PageFactory $pageFactory,
@@ -236,7 +236,7 @@ use Exception;
 
 class Upload extends Action implements HttpPostActionInterface
 {
-    protected $imageUploader;
+    protected ImageUploader $imageUploader;
     
     public function __construct(Context $context, ImageUploader $imageUploader)
     {

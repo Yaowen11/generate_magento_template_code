@@ -69,9 +69,9 @@ use Magento\\Framework\\ObjectManagerInterface;
 
 class ${this.#modelMeta.name}Factory
 {
-    private $objectManager;
+    private ObjectManagerInterface $objectManager;
     
-    private $instanceName;
+    private string $instanceName;
     
     public function __construct(ObjectManagerInterface $objectManager, $instanceName = ${this.#modelMeta.name}::class) 
     {
@@ -131,9 +131,9 @@ use Magento\\Framework\\ObjectManagerInterface;
 
 class CollectionFactory
 {
-    private $objectManager;
+    private ObjectManagerInterface $objectManager;
     
-    private $instanceName;
+    private string $instanceName;
     
     public function __construct(ObjectManagerInterface $objectManager, $instanceName = ${this.#modelMeta.collectionName}::class) 
     {
@@ -164,13 +164,13 @@ use Psr\\Log\\LoggerInterface;
 
 class ${this.#modelMeta.repositoryName}
 {
-    private ${this.#modelMeta.resourceVariable};
+    private Resource${this.#modelMeta.resourceName} ${this.#modelMeta.resourceVariable};
     
-    private ${this.#modelMeta.variable}Factory;
+    private ${this.#modelMeta.name}Factory ${this.#modelMeta.variable}Factory;
     
-    private $collectionFactory;
+    private CollectionFactory $collectionFactory;
     
-    private $logger;
+    private LoggerInterface $logger;
     
     public function __construct(Resource${this.#modelMeta.resourceName} ${this.#modelMeta.resourceVariable},
                                 ${this.#modelMeta.name}Factory ${this.#modelMeta.variable}Factory,
@@ -266,11 +266,13 @@ ${this.#modelMeta.repositoryUseName};
 
 class DataProvider extends AbstractDataProvider
 {
-    private $request;
+    private RequestInterface $request;
     
-    private $repository;
+    private ${this.#modelMeta.repositoryName} $repository;
     
-    protected $primaryFieldName = '${this.#tableMeta.primaryKey}';
+    protected string $primaryFieldName = '${this.#tableMeta.primaryKey}';
+    
+    protected array $loadedData = [];
     
     public function __construct($name,
                                 $primaryFieldName,
@@ -298,35 +300,34 @@ class DataProvider extends AbstractDataProvider
         $this->loadedData = [];
         $requestId = $this->request->getParam($this->requestFieldName);
         if ($requestId) {
-            $post = $this->repository->getById($requestId);
-            if (!$post->getId()) {
+            $entity = $this->repository->getById($requestId);
+            if (!$entity->getId()) {
                 throw NoSuchEntityException::singleField('${this.#tableMeta.primaryKey}', $requestId);
             }
-            $postData = $post->getData();
+            $entityData = $entity->getData();
 `
         for (let column of this.#tableMeta.column) {
             if (column['@@name'].includes("image")) {
                 dataProviderContent += `
-            if (isset($postData['${column['@@name']}'])) {
+            if (isset($entityData['${column['@@name']}'])) {
                 \$${column['@@name']} = [
                     [
-                        'name' => basename($postData['${column['@@name']}']),
-                        'url' => $postData['${column['@@name']}'],
+                        'name' => basename($entityData['${column['@@name']}']),
+                        'url' => $entityData['${column['@@name']}'],
                         'type' => 'image'
                     ]
                 ];
-                $postData['${column['@@name']}'] = \$${column['@@name']};                
+                $entityData['${column['@@name']}'] = \$${column['@@name']};                
 `
-                dataProviderContent += `
             }
-            $this->loadedData[$requestId] = $postData;
+        }
+        dataProviderContent += `
+            $this->loadedData[$requestId] = $entityData;
         }
         return $this->loadedData;
    }
 }
 `
-            }
-        }
         return dataProviderContent;
     }
 }

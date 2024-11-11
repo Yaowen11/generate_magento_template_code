@@ -2,25 +2,26 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Magento Grid Build</title>
     <style>
         .elegant-aero {
-            margin-left: auto;
-            margin-right: auto;
-            max-width: 500px;
+            margin: 0 auto;
+            max-width: 90%;
             background: #D2E9FF;
-            padding: 20px 20px 20px 20px;
+            padding: 20px;
             font: 12px Arial, Helvetica, sans-serif;
             color: #666;
+            box-sizing: border-box;
         }
 
         .elegant-aero h1 {
             font: 24px "Trebuchet MS", Arial, Helvetica, sans-serif;
-            padding: 10px 10px 10px 20px;
-            display: block;
+            padding: 10px 20px;
             background: #C0E1FF;
             border-bottom: 1px solid #B8DDFF;
-            margin: -20px -20px 15px;
+            margin: -20px -20px 15px -20px;
+            box-sizing: border-box;
         }
 
         .elegant-aero h1 > span {
@@ -28,76 +29,61 @@
             font-size: 11px;
         }
 
+        .elegant-aero label {
+            display: block;
+            margin-bottom: 15px;
+        }
+
         .elegant-aero label > span {
-            float: left;
-            margin-top: 10px;
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
             color: #5E5E5E;
         }
 
-        .elegant-aero label {
-            display: block;
-            margin: 0px 0px 5px;
-        }
-
-        .elegant-aero label > span {
-            float: left;
-            width: 20%;
-            text-align: right;
-            padding-right: 15px;
-            margin-top: 10px;
-            font-weight: bold;
-        }
-
-        .elegant-aero input[type="text"], .elegant-aero input[type="email"], .elegant-aero textarea, .elegant-aero select {
-            color: #888;
-            width: 70%;
-            padding: 0px 0px 0px 5px;
+        .elegant-aero input[type="text"],
+        .elegant-aero textarea,
+        .elegant-aero select {
+            width: 100%;
+            padding: 10px;
             border: 1px solid #C5E2FF;
             background: #FBFBFB;
-            outline: 0;
-            -webkit-box-shadow: inset 0px 1px 6px #ECF3F5;
-            box-shadow: inset 0px 1px 6px #ECF3F5;
-            font: 200 12px/25px Arial, Helvetica, sans-serif;
-            height: 30px;
-            line-height: 15px;
-            margin: 2px 6px 16px 0px;
+            font: 12px Arial, Helvetica, sans-serif;
+            box-sizing: border-box;
+            margin-bottom: 15px;
         }
 
         .elegant-aero textarea {
-            height: 100px;
-            padding: 5px 0px 0px 5px;
-            width: 70%;
-        }
-
-        .elegant-aero select {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            text-indent: 0.01px;
-            text-overflow: '';
-            width: 70%;
+            height: 150px; /* Larger height for textarea */
         }
 
         .elegant-aero .button {
-            padding: 10px 30px 10px 30px;
+            padding: 10px 30px;
             background: #66C1E4;
             border: none;
             color: #FFF;
             box-shadow: 1px 1px 1px #4C6E91;
-            -webkit-box-shadow: 1px 1px 1px #4C6E91;
-            -moz-box-shadow: 1px 1px 1px #4C6E91;
             text-shadow: 1px 1px 1px #5079A3;
-
+            width: 100%;
+            cursor: pointer;
+            box-sizing: border-box;
         }
 
         .elegant-aero .button:hover {
             background: #3EB1DD;
         }
+
+        /* Media query for larger screens */
+        @media (min-width: 600px) {
+            .elegant-aero {
+                max-width: 500px;
+            }
+        }
     </style>
 </head>
 <body>
 <form action="/grid" method="post" class="elegant-aero">
-    <h1>Magento Backend Grid And Graphql
+    <h1>Magento Backend Grid And GraphQL
         <span>magento管理后台grid生成及graphql查询生成</span>
     </h1>
     <label>
@@ -105,13 +91,13 @@
         <input id="name" type="text" name="module_name" required="required" placeholder="like Vendor_Module"/>
     </label>
     <label>
-        <span>Table Name :</span>
-        <input id="email" type="text" name="grid_url" required="required" placeholder="backend grid url like route/index"/>
+        <span>Access Route :</span>
+        <input id="grid_url" type="text" name="grid_url" required="required" placeholder="backend grid url like route/index"/>
     </label>
 
     <label>
-        <span>Table Xml :</span>
-        <textarea id="message" name="table_define" required="required" placeholder="Magento Table Define Xml"></textarea>
+        <span>Table XML :</span>
+        <textarea id="table_define" name="table_define" required="required" placeholder="Magento Table Define XML"></textarea>
     </label>
     <label>
         <span>&nbsp;</span>
