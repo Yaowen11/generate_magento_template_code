@@ -27,6 +27,12 @@ class MagentoView {
         MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(layoutDir, `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_index.xml`), this.#viewIndexLayout);
         MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(layoutDir, `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_edit.xml`), this.#viewEditLayout);
         MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(layoutDir, `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_new.xml`), this.#viewEditLayout);
+        // create ui form buttons
+        const blockAdminhtmlEditDir = path.join(this.#moduleMeta.realPath, 'Block', 'Adminhtml', 'Edit');
+        MagentoCommons.syncRecursionCreateDir(blockAdminhtmlEditDir);
+        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(blockAdminhtmlEditDir, 'BackButton.php'), this.#formBackButton);
+        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(blockAdminhtmlEditDir, 'SaveButton.php'), this.#formSaveButton);
+        MagentoCommons.ifFileNotExistsAsyncWriteFile(path.join(blockAdminhtmlEditDir, 'ResetButton.php'), this.#formResetButton);
         // ui component files
         const componentDir = path.join(viewAdminhtmlDir, 'ui_component');
         MagentoCommons.syncRecursionCreateDir(componentDir);
@@ -51,6 +57,83 @@ class MagentoView {
             path.join(uiDataProviderClassDir, `${this.#backendUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#backendUrlMeta.controller.slice(1)}DataProvider.php`),
             this.#uiDataProvider
         )
+    }
+
+    get #formBackButton() {
+        return `<?php
+
+namespace ${this.#moduleMeta.namespace}\\Block\\Adminhtml\\Edit;
+
+use Magento\\Backend\\Block\\Widget\\Context;
+use Magento\\Framework\\UrlInterface;
+use Magento\\Framework\\View\\Element\\UiComponent\\Control\\ButtonProviderInterface;
+
+class BackButton implements ButtonProviderInterface
+{
+    private UrlInterface $urlBuilder;
+    
+    public function __construct(Context $context)
+    {
+        $this->urlBuilder = $context->getUrlBuilder();
+    }
+    
+    public function getButtonData(): array
+    {
+        $backUrl = $this->urlBuilder->getUrl('*/*/', []);
+        return [
+            'label' => __('Back'),
+            'on_click' => sprintf("location.href = '%s';", $backUrl)
+        ];
+    }
+}
+        `
+    }
+
+    get #formSaveButton() {
+        return `<?php
+
+name ${this.#moduleMeta.namespace}\\Block\\Adminhtml\\Edit;
+
+use Magento\\Framework\\View\\Element\\UiComponent\\Control\\ButtonProviderInterface;
+
+class SaveButton implements ButtonProviderInterface
+{
+    public function getButtonData(): array
+    {
+        return [
+            'label' => __('Save'),
+            'class' => 'save primary',
+            'data_attribute' => [
+                'mage-init' => ['button' => ['event' => 'save']],
+                'form-role' => 'save',
+            ],
+            'sort_order' => 90,
+        ];
+    }
+}
+        `
+    }
+
+    get #formResetButton() {
+        return `<?php
+
+namespace ${this.#moduleMeta.namespace}\\Block\\Adminhtml\\Edit;
+        
+use Magento\\Framework\\View\\Element\\UiComponent\\Control\\ButtonProviderInterface;
+
+class ResetButton implements ButtonProviderInterface
+{
+    public function getButtonData(): array
+    {
+        return [
+            'label' => __('Reset'),
+            'class' => 'reset',
+            'on_click' => 'location.reload();',
+            'sort_order' => 30      
+        ];
+    }
+}
+        `
     }
 
     #componentColumnClassContent(columnDefine) {
@@ -494,15 +577,15 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                         "button": [
                             {
                                 "@@name": "save",
-                                "@@class": "Magento\\Customer\\Block\\Adminhtml\\Edit\\SaveButton"
+                                "@@class": `${this.#moduleMeta.namespace}` + "\\Block\\Adminhtml\\Edit\\SaveButton"
                             },
                             {
                                 "@@name": "reset",
-                                "@@class": "Magento\\Customer\\Block\\Adminhtml\\Edit\\ResetButton"
+                                "@@class": `${this.#moduleMeta.namespace}` + "\\Block\\Adminhtml\\Edit\\ResetButton"
                             },
                             {
                                 "@@name": "back",
-                                "@@class": "Magento\\Customer\\Block\\Adminhtml\\Edit\\BackButton"
+                                "@@class": `${this.#moduleMeta.namespace}` + "\\Block\\Adminhtml\\Edit\\BackButton"
                             }
                         ]
                     },
