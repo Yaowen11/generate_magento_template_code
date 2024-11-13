@@ -51,7 +51,7 @@ ${this.#modelMeta.resourceUseName};
                 })
             }
         }
-        modelContent += os.EOL + `    protected function _construct()
+        modelContent += os.EOL + `    protected function _construct(): void
     {
         $this->_init(Resource${this.#modelMeta.name}::class);
     }
@@ -96,7 +96,7 @@ use Magento\\Framework\\Model\\ResourceModel\\Db\\AbstractDb;
 
 class ${this.#modelMeta.resourceName} extends AbstractDb
 {
-    protected function _construct()
+    protected function _construct(): void
     {
         $this->_init('${this.#tableMeta.name}', '${this.#tableMeta.primaryKey}');
     }
@@ -114,7 +114,7 @@ ${this.#modelMeta.resourceUseName};
 
 class Collection extends AbstractCollection
 {
-    protected function _construct()
+    protected function _construct(): void
     {
         $this->_init(${this.#modelMeta.name}::class, Resource${this.#modelMeta.resourceName}::class);
     }
@@ -243,7 +243,7 @@ class ${this.#modelMeta.repositoryName}
         if (!empty($data)) {
             foreach ($data as $column => $value) {
                 $setFunctionName = array_reduce(explode('_', $column), function ($initString, $item) {
-                    return $initString .= ucfirst($item);
+                    return $initString . ucfirst($item);
                 }, 'set');
                 ${this.#modelMeta.variable}->$setFunctionName($value);
             }
@@ -270,10 +270,6 @@ class DataProvider extends AbstractDataProvider
     
     private ${this.#modelMeta.repositoryName} $repository;
     
-    protected string $primaryFieldName = '${this.#tableMeta.primaryKey}';
-    
-    protected array $loadedData = [];
-    
     public function __construct($name,
                                 $primaryFieldName,
                                 $requestFieldName,
@@ -294,11 +290,8 @@ class DataProvider extends AbstractDataProvider
      */
     public function getData(): array
     {
-        if (isset($this->loadedData)) {
-            return $this->loadedData;
-        }
-        $this->loadedData = [];
-        $requestId = $this->request->getParam($this->requestFieldName);
+        $data = [];
+        $requestId = $this->request->getParam('id');
         if ($requestId) {
             $entity = $this->repository->getById($requestId);
             if (!$entity->getId()) {
@@ -322,9 +315,9 @@ class DataProvider extends AbstractDataProvider
             }
         }
         dataProviderContent += `
-            $this->loadedData[$requestId] = $entityData;
+            $data[$requestId] = $entityData;
         }
-        return $this->loadedData;
+        return $data;
    }
 }
 `

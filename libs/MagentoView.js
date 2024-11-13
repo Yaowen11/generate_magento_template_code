@@ -339,7 +339,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                                             },
                                             {
                                                 "item": {
-                                                    "#text": "id",
+                                                    "#text": `${this.#tableMeta.primaryKey}`,
                                                     "@@name": "indexField",
                                                     "@@xsi:type": "string"
                                                 },
@@ -497,6 +497,21 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                 }
             }
         }
+        if (columnDefine['@@xsi:type'].includes('boolean')) {
+            return {
+                "@@name": columnDefine['@@name'],
+                "@@component": "Magento_Ui/js/grid/columns/select",
+                "settings": {
+                    filter: {'#text': 'select'},
+                    dataType: {'#text': 'select'},
+                    options: {'@@class': 'Magento\\Config\\Model\Config\\Source\\Yesno'},
+                    label: {
+                        '@@translate': "true",
+                        '#text': translateName
+                    }
+                }
+            }
+        }
         if (columnDefine['@@xsi:type'].includes('datetime') || columnDefine['@@xsi:type'].includes('timestamp')) {
             return {
                 "@@name": columnDefine['@@name'],
@@ -530,7 +545,7 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                 "settings": {
                     "dataType": "text",
                     "label": {
-                        "#text": "Title",
+                        "#text": translateName,
                         "@@translate": "true"
                     }
                 }
@@ -616,8 +631,8 @@ class ${MagentoCommons.underscore2hump(columnDefine['@@name'])} implements Optio
                     },
                     "dataProvider": {
                         "settings": {
-                            "requestFieldName": `${this.#tableMeta.primaryKey ?? 'id'}`,
-                            "primaryFieldName": `${this.#tableMeta.primaryKey ?? 'id'}`
+                            "requestFieldName": 'id',
+                            "primaryFieldName": `${this.#tableMeta.primaryKey}`
                         },
                         "@@class": `${this.#modelMeta.collectionNamespace}\\DataProvider`,
                         "@@name": `${this.#backendUrlMeta.route}_${this.#backendUrlMeta.controller}_form_data_source`
@@ -672,7 +687,7 @@ use Magento\\Ui\\Component\\Listing\\Columns\\Column;
 
 class ${this.#backendUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#backendUrlMeta.controller.slice(1)}Actions extends Column
 {
-    private $urlBuilder;
+    private UrlInterface $urlBuilder;
     
     public function __construct(ContextInterface $context,
                                 UrlInterface $urlBuilder,
@@ -877,6 +892,45 @@ class ${this.#backendUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#ba
                         "settings": {
                             "options": {
                                 "@@class": `${this.#moduleMeta.namespace}\\Ui\\Component\\Listing\\Column\\${MagentoCommons.underscore2hump(columnDefine['@@name'])}`
+                            }
+                        }
+                    }
+                },
+                "@@name": columnDefine['@@name'],
+                "@@formElement": "select"
+            };
+        }
+        if (columnDefine['@@xsi:type'].includes("boolean")) {
+            return {
+                "argument": {
+                    "item": {
+                        "item": [
+                            {
+                                "#text": columnDefine['@@name'],
+                                "@@name": "source",
+                                "@@xsi:type": "string"
+                            },
+                            {
+                                "#text": `${MagentoCommons.underscore2hump(columnDefine['@@name'])}`,
+                                "@@name": "label",
+                                "@@xsi:type": "string",
+                                "@@translate": "true"
+                            }
+                        ],
+                        "@@name": "config",
+                        "@@xsi:type": "array"
+                    },
+                    "@@name": "data",
+                    "@@xsi:type": "array"
+                },
+                "settings": {
+                    "dataType": "text"
+                },
+                "formElements": {
+                    "select": {
+                        "settings": {
+                            "options": {
+                                "@@class": `Magento\\Config\\Model\\Config\\Source\\Yesno`
                             }
                         }
                     }
