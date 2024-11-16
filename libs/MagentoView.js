@@ -706,11 +706,11 @@ class ${this.#backendUrlMeta.controller.substring(0, 1).toUpperCase()}${this.#ba
                 if (isset($item['${this.#tableMeta.primaryKey}'])) {
                     $item[$this->getData('name')] = [
                         'edit' => [
-                            'href' => $this->urlBuilder->getUrl('${this.#backendUrlMeta.route}/${this.#backendUrlMeta.controller}/edit', ['id' => $item['id']]),
+                            'href' => $this->urlBuilder->getUrl('${this.#backendUrlMeta.route}/${this.#backendUrlMeta.controller}/edit', ['id' => $item['${this.#tableMeta.primaryKey}']]),
                             'label' => __('Edit'),
                         ],
                         'delete' => [
-                            'href' => $this->urlBuilder->getUrl('${this.#backendUrlMeta.route}/${this.#backendUrlMeta.controller}/delete', ['id' => $item['id']]),
+                            'href' => $this->urlBuilder->getUrl('${this.#backendUrlMeta.route}/${this.#backendUrlMeta.controller}/delete', ['id' => $item['${this.#tableMeta.primaryKey}']]),
                             'label' => __('Delete'),
                             'confirm' => [
                                 'title' => __('Delete'),
